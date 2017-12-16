@@ -263,7 +263,7 @@ function help() {
 //create or update hodl
 function updateHodl(price,hodlingsIndex) {
 	//check if this is a new hodl
-	if(!hodlingsIndex) {
+	if(hodlingsIndex==null) {
 		//new hodl
 		modalHodlAmount.value="0.00";
 	} else {
@@ -293,7 +293,7 @@ function updateHodl(price,hodlingsIndex) {
 		    	}
 		    	
 		    	//check if this is a new hodl
-		    	if(!hodlingsIndex) {
+		    	if(hodlingsIndex==null) {
 		    		//add new hodl
 		    		var hodl={symbol:price.symbol,amount:amount};
 		    		hodlingData.hodlings.push(hodl);
