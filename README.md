@@ -1,7 +1,8 @@
 # hodlerfolio.com
 Track your cryptcurrency hodling portfolio; single HTML file, no tracking!
 
-
+### Try it out:
+https://hodlerfolio.com/index.html
 
 ## Features
 - Single HTML file, can run directly from your desktop
