@@ -332,11 +332,15 @@ function upload() {
 			tableHodlingsPreview.classList.add("hide");			
 		},
 		onApprove:function(){
+			//exit if no data
+			if(!hodlingDataNew) return;
+			
 			//hide table for next time			
 			tableHodlingsPreview.classList.add("hide");
 			
 			//copy the data to use now, create new object
 			hodlingData=JSON.parse(JSON.stringify(hodlingDataNew));
+			hodlingDataNew=null;
 			
 	    	//save to storage
 			localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
