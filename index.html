@@ -60,7 +60,6 @@
 		color: #6435c9;
 	}
 	.quote {
-		/*font-family: 'Dancing Script', cursive;*/
 		font-style:italic;
 	}
 	.ui.search .prompt {
@@ -76,13 +75,19 @@
 	#donateLinks img {
 		margin-top:6px;
 	}
+	.hide {
+		display:none;
+	}
+	
+	#hodler { border: 10px dashed #ccc; width: 470px; height: 300px; margin: 20px auto; overflow-y: auto;}
+	#hodler.hover { border: 10px dashed #333; }
 	</style>
 	<script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.js"></script>
 	<title>Hodler Folio</title>
 	<script>
 //global vars
-var prices,hodlingData,fiat;
+var prices,hodlingData,hodlingDataNew,fiat;
 
 var fiats=[
     {token:"$",symbol:"USD"},
@@ -119,15 +124,18 @@ var fiats=[
 	{token:"R",symbol:"ZAR"}
 ]
 //html page elements
-var tbodyHodlings,spanTotalValue,spanChange24hr,iconChange24hr,iAddHodlings,inputAddHodlings;
+var tbodyHodlings,tbodyHodlingsPreview,tableHodlingsPreview,spanTotalValue,spanChange24hr,iconChange24hr,iAddHodlings,inputAddHodlings;
 var modalCoinHeader,modalCoinImage,modalCoinPrompt,modalCryptoSign,modalCryptoSymbol;
 var modalAlertHeader,modalAlertMessage,modalConfirmHeader,modalConfirmMessage,modalConfirmNeg,modalConfirmPos;
 var clearAll,donate,btnSave,btnUpload,btnConfigure,btnHelp;
+var hodler,hodlerState;
 
 //called on page load
 function init() {
 	//initialize html element vars
 	tbodyHodlings=document.getElementById("tbodyHodlings");
+	tbodyHodlingsPreview=document.getElementById("tbodyHodlingsPreview");
+	tableHodlingsPreview=document.getElementById("tableHodlingsPreview");
 	spanTotalValue=document.getElementById("spanTotalValue");
 	spanChange24hr=document.getElementById("spanChange24hr");
 	iconChange24hr=document.getElementById("iconChange24hr");
@@ -155,6 +163,10 @@ function init() {
 	btnUpload.addEventListener("click",upload);
 	btnConfigure.addEventListener("click",configure);
 	btnHelp.addEventListener("click",help);
+	
+	//uploads
+	hodler=document.getElementById("hodler"),
+	hodlerState=document.getElementById("status");
 	
 	//clear all hodls menu button
 	clearAll.addEventListener("click",clearAllHodls);
@@ -242,14 +254,98 @@ function init() {
 		})
 		.modal("show");		
 	});
+	
+	//upload holdings.json file
+	hodler.ondragover=function() {
+	    this.className="hover";
+	    return false;
+	};
+	hodler.ondragend=function() {
+	    this.className="";
+	    return false;
+	};
+	hodler.ondrop = function(e) {
+	    this.className="";
+	    e.preventDefault();
+	
+	    var file=e.dataTransfer.files[0],
+	        reader=new FileReader();
+	    
+	    reader.onload=function(event) {
+	    	try {
+	        	var json=JSON.parse(event.target.result);
+	        	//check for correct properties
+	        	if(("defaultFiat" in json) && ("hodlings" in json)) {
+	        		//has properties so store in new buffer
+	        		hodlingDataNew=json;
+	        		//preview the data
+	        		updateUploadPreview();
+	        	} else {
+	        		hodlAlert("Hodl file is missing key properties");
+	        	}
+	    	} catch(e) {
+	    		hodlAlert("Hodl file error: "+e.message);
+	    	}
+	    };
+	    console.log(file);
+
+	    //check for .json file type
+	    if(file.name.endsWith(".json")) {
+	    	reader.readAsText(file);
+	    } else {
+	    	hodlAlert("The file must end with '.json'");
+	    }
+	
+	    return false;
+	};
 }
 
 function save() {
-	hodlAlert("This feature is coming soon!","Coming Soon!");
+	//filename
+	var filename="hodlings.json";
+	
+	//construct the a element
+	var a=document.createElement("a");
+	var file=new Blob([JSON.stringify(hodlingData)],{type:"text/plain"});
+	a.download=filename;
+
+	//construct the uri
+	a.href=URL.createObjectURL(file);
+	document.body.appendChild(a);
+	a.click();
+
+	//cleanup the DOM
+	document.body.removeChild(a);
+	delete a;
+
+	hodlAlert("Your hodlings have been saved to '"+filename+"'!","Hodlings Hodled!");
 }
 
 function upload() {
-	hodlAlert("This feature is coming soon!","Coming Soon!");
+	$("#modalUpload")
+	.modal({
+		allowMultiple:true,
+		transition:"scale",
+		closable:false,
+		onDeny:function() {
+			//hide table for next time			
+			tableHodlingsPreview.classList.add("hide");			
+		},
+		onApprove:function(){
+			//hide table for next time			
+			tableHodlingsPreview.classList.add("hide");
+			
+			//copy the data to use now, create new object
+			hodlingData=JSON.parse(JSON.stringify(hodlingDataNew));
+			
+	    	//save to storage
+			localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
+	    	
+	    	//update all display
+	    	updateHodlingTable();
+		}
+	})
+	.modal("show");
 }
 
 function configure() {
@@ -576,6 +672,110 @@ function updateHodlingTable() {
 	}
 }
 
+function updateUploadPreview() {
+		
+	//clear existing hodler children
+	while(tbodyHodlingsPreview.childNodes.length>0) tbodyHodlingsPreview.removeChild(tbodyHodlingsPreview.childNodes[0]);
+	
+	//show preview of data in json file
+	var tr,td,img,br,txt,span,iTag;
+	
+	//go through existing hodlings and create new row
+	for(var i=0,hodlings=hodlingDataNew.hodlings;i<hodlings.length;i++) {
+		
+		//get this hodling
+		var hodling=hodlings[i];
+		
+		//get the price data for this hodling
+		var price=prices.find(obj=>obj.symbol===hodling.symbol);
+		
+		//get amount in fiat
+		var priceInFiat=parseFloat(price.price_usd);
+		var amount=parseFloat(hodling.amount);
+		var percentChange=parseFloat(price.percent_change_24h);
+		var amountInFiat=(priceInFiat*hodling.amount);
+		var amountInFiat24hrsAgo=amountInFiat*(1-percentChange/100);
+		
+		//new table row
+		tr=document.createElement("tr");
+		
+		//create coin/symbol
+		td=document.createElement("td");
+		td.classList.add("center","aligned");
+		//coin image
+		img=document.createElement("img");
+		img.src="https://files.coinmarketcap.com/static/img/coins/32x32/"+price.id+".png";
+		img.alt=price.name;
+		td.appendChild(img);
+		//br line break
+		br=document.createElement("br");
+		td.appendChild(br);
+		//symbol
+		txt=document.createTextNode(price.symbol);
+		td.appendChild(txt);
+		//add cell to row
+		tr.appendChild(td);
+		
+		//create amount in fiat/amount in native
+		td=document.createElement("td");
+		td.classList.add("right","aligned");
+		//amount in fiat
+		span=document.createElement("span");
+		span.className="fiatAmount";
+		td.appendChild(span);
+		txt=document.createTextNode(fiat.token+toCurrency(amountInFiat));
+		span.appendChild(txt);
+		//br line break
+		br=document.createElement("br");
+		td.appendChild(br);
+		//amount in native
+		span=document.createElement("span");
+		span.className="amount";
+		td.appendChild(span);
+		txt=document.createTextNode(parseFloat(amount));
+		span.appendChild(txt);
+		//add cell to row
+		tr.appendChild(td);
+		
+		//current fiat price/percent change
+		td=document.createElement("td");
+		td.classList.add("right","aligned","padRight");
+		//current fiat price
+		span=document.createElement("span");
+		span.className="price";
+		td.appendChild(span);
+		txt=document.createTextNode(fiat.token+toCurrency(priceInFiat));
+		span.appendChild(txt);
+		iTag=document.createElement("i");
+		if(percentChange>0) {
+			iTag.classList.add("icon","long","arrow","up","priceUp");
+		} else if(percentChange<0) {
+			iTag.classList.add("icon","long","arrow","down","priceDown");
+		} else {
+			iTag.classList.add("icon","minus");
+		}
+		span.appendChild(iTag);
+		//br line break
+		br=document.createElement("br");
+		td.appendChild(br);
+		//percent change
+		span=document.createElement("span");
+		span.className=percentChange>0?"priceUp":(percentChange<0?"priceDown":"");
+		td.appendChild(span);
+		txt=document.createTextNode((percentChange>=0?"+":"")+percentChange+"%");
+		span.appendChild(txt);
+		//add cell to row
+		tr.appendChild(td);
+		
+		//add row
+		tbodyHodlingsPreview.appendChild(tr);
+	}
+	
+	//show table
+	tableHodlingsPreview.classList.remove("hide");
+
+}
+
 function editHodl() {
 	updateHodl(this.price,this.hodlIndex);
 }
@@ -585,7 +785,7 @@ function alertHodl() {
 }
 
 function deleteHodl() {
-	hodlConfirm("Are you sure you want to delete this hodl?","Delete Your Hodl???","Hodl no! What was I thinking?","Maybe...",function() {
+	hodlConfirm("Are you sure you want to delete this hodl?","Delete Your Hodl???","Hodl no! What was I thinking?","All right.",function() {
 		//remove this hold
 		hodlingData.hodlings.splice(this.hodlIndex,1);
 		
@@ -633,7 +833,7 @@ function clearAllHodls() {
 			<div style="color: #6435c9;">&bull;&nbsp;Open source (<a href="https://github.com/rengelking/hodlerfolio.com" target="_blank">GitHub</a>)&nbsp;&nbsp;&nbsp;&bull;&nbsp;Single HTML file, can run from your desktop&nbsp;&nbsp;&nbsp;&bull;&nbsp;You track your portfolio, no one tracks you!</div>
 		</div>
 		<div class="ui violet inverted menu">
-			<a class="header item">Hodlerfolio</a>
+			<a class="header item">Hodlerfolio V1.0.0</a>
 			<div class="right menu">
 				<div id="searchHodlings" class="ui right aligned search attached item">
 					<div class="ui icon input">
@@ -673,7 +873,9 @@ function clearAllHodls() {
 						</thead>
 						<tbody id="tbodyHodlings">
 							<tr>
-								<td colspan="4">Retrieving latest prices, please wait...</td>
+								<td colspan="4" class="center aligned">
+									<div class="ui active centered inline medium text loader">Retrieving latest prices, please wait...</div>
+								</td>
 							</tr>
 						</tbody>
 					</table>
@@ -681,6 +883,9 @@ function clearAllHodls() {
 			</div>
 		</div>
 	</div>
+	
+<!-- begin edit hodl modal -->
+
 	<div id="modalEditHodl" class="ui tiny modal">
 		<i class="close icon"></i>
 		<div class="header">
@@ -710,6 +915,9 @@ function clearAllHodls() {
 			</div>
 		</div>
 	</div>
+	
+<!-- begin alert hodl modal -->
+	
 	<div id="modalAlertHodl" class="ui mini modal">
 		<div id="modalAlertHeader" class="header"></div>
 		<div class="content">
@@ -719,6 +927,36 @@ function clearAllHodls() {
 			<div class="ui positive button">Whatever</div>
 		</div>
 	</div>
+	
+<!-- begin upload hodl modal -->
+
+	<div id="modalUpload" class="ui tiny modal">
+		<div class="header">Drag and drop your 'hodlings.json' file here:</div>
+		<div class="content">
+			<div id="hodler">
+				<table id="tableHodlingsPreview" class="ui celled table hide">
+					<thead>
+						<tr>
+							<th class="center aligned">Coin</th>
+							<th class="center aligned">Hodlings</th>
+							<th class="center aligned single line">Fiat Price</th>
+						</tr>
+					</thead>
+					<tbody id="tbodyHodlingsPreview">
+					</tbody>
+				</table>
+
+			</div>
+			<p>Drag a <b>hodlings.json</b> file on to the hodl zone above to view update/replace your current hodlings.</p>
+		</div>
+		<div class="actions">
+			<div class="ui negative button">Hodl on, don't do anything!</div>
+			<div class="ui positive right labled icon button">Looks good!!!</div>
+		</div>
+	</div>
+	
+<!-- begin confirm hodl modal -->
+
 	<div id="modalConfirmHodl" class="ui mini modal">
 		<div id="modalConfirmHeader" class="header"></div>
 		<div class="content">
@@ -731,6 +969,9 @@ function clearAllHodls() {
 			</div>
 		</div>
 	</div>
+	
+<!-- begin donate hodl modal -->
+
 	<div id="modalDonate" class="ui tiny modal">
 		<div class="header">Thanks for helping out!</div>
 		<div class="content">
