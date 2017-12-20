@@ -78,6 +78,13 @@
 	.hide {
 		display:none;
 	}
+	th.sorted.ascending:after {
+		content: "  \2191";
+	}
+	
+	th.sorted.descending:after {
+		content: " \2193";
+	}
 	
 	#hodler { border: 10px dashed #ccc; width: 470px; height: 300px; margin: 20px auto; overflow-y: auto;}
 	#hodler.hover { border: 10px dashed #333; }
@@ -88,7 +95,7 @@
 	<script>
 //global vars
 var prices,hodlingData,hodlingDataNew,fiat;
-var currentVersion="v1.0.1",latestVersion;
+var currentVersion="v1.0.2",latestVersion;
 
 var fiats=[
     {token:"$",symbol:"USD"},
@@ -309,6 +316,18 @@ function init() {
 	
 	    return false;
 	};
+	
+	//make the main table sortable
+	$("#mainTable").tablesort();
+	
+	//save the sort direction if changed
+	$("#mainTable").on("tablesort:complete",function(event,tablesort) {
+		//save that sort direction changed
+		hodlingData.tablesort={index:tablesort.index,direction:tablesort.direction};
+		
+    	//save to storage
+		localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
+	});
 }
 
 function checkForNewVersion() {
@@ -617,6 +636,10 @@ function toCurrency(n) {
 	return (Number(n)).toLocaleString('en-US',{style:'decimal',maximumFractionDigits:2,minimumFractionDigits:2});
 }
 
+function coinDetails() {
+	window.open("https://coinmarketcap.com/currencies/"+this.dataset.id,"_blank");
+}
+
 function updateHodlingTable() {
 	
 	//clear existing hodlings rows
@@ -648,6 +671,8 @@ function updateHodlingTable() {
 		
 		//new table row
 		tr=document.createElement("tr");
+		tr.dataset.id=price.id;
+		tr.addEventListener("click",coinDetails);
 		
 		//create coin/symbol
 		td=document.createElement("td");
@@ -684,6 +709,8 @@ function updateHodlingTable() {
 		td.appendChild(span);
 		txt=document.createTextNode((""+amount.toFixed(12)).replace(/\.?0+$/,""));
 		span.appendChild(txt);
+		//sort value
+		td.dataset.sortValue=amountInFiat;
 		//add cell to row
 		tr.appendChild(td);
 		
@@ -714,6 +741,8 @@ function updateHodlingTable() {
 		td.appendChild(span);
 		txt=document.createTextNode((percentChange>=0?"+":"")+percentChange+"%");
 		span.appendChild(txt);
+		//sort value
+		td.dataset.sortValue=priceInFiat;
 		//add cell to row
 		tr.appendChild(td);
 		
@@ -769,6 +798,26 @@ function updateHodlingTable() {
 	} else {
 		iconChange24hr.classList.add("icon","minus");
 	}
+	
+	//get tablesort reference
+	var tablesort=$("#mainTable").data("tablesort");
+
+	//sort the table data
+	if("tablesort" in hodlingData) {
+		
+		//set sort if there was a sort already set
+		tablesort.sort($("#th"+hodlingData.tablesort.index),hodlingData.tablesort.direction);
+	} else {
+		//set default sort direction and save
+		hodlingData.tablesort={index:0,direction:"asc"};
+		
+    	//save to storage
+		localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
+    	
+		//set sort
+		tablesort.sort($("#th0"),"asc");
+	}
+	
 }
 
 function updateUploadPreview() {
@@ -875,7 +924,8 @@ function updateUploadPreview() {
 
 }
 
-function editHodl() {
+function editHodl(event) {
+	event.stopPropagation();
 	updateHodl(this.price,this.hodlIndex);
 }
 
@@ -883,7 +933,8 @@ function alertHodl() {
 	
 }
 
-function deleteHodl() {
+function deleteHodl(event) {
+	event.stopPropagation();
 	hodlConfirm("Are you sure you want to delete this hodl?","Delete Your Hodl???","Hodl no!","Just do it.",function(positiveResponse) {
 		if(positiveResponse) {
 			//remove this hold
@@ -912,6 +963,139 @@ function clearAllHodls() {
 		}
 	}.bind(this));
 }
+
+/*
+A simple, lightweight jQuery plugin for creating sortable tables.
+https://github.com/kylefox/jquery-tablesort
+Version 0.0.11
+*/
+
+(function($) {
+$.tablesort = function ($table, settings) {
+	var self = this;
+	this.$table = $table;
+	this.$thead = this.$table.find('thead');
+	this.settings = $.extend({}, $.tablesort.defaults, settings);
+	this.$sortCells = this.$thead.length > 0 ? this.$thead.find('th:not(.no-sort)') : this.$table.find('th:not(.no-sort)');
+	this.$sortCells.on('click.tablesort', function() {
+		self.sort($(this));
+	});
+	this.index = null;
+	this.$th = null;
+	this.direction = null;
+};
+
+$.tablesort.prototype = {
+
+	sort: function(th, direction) {
+		var start = new Date(),
+			self = this,
+			table = this.$table,
+			rowsContainer = table.find('tbody').length > 0 ? table.find('tbody') : table,
+			rows = rowsContainer.find('tr').has('td, th'),
+			cells = rows.find(':nth-child(' + (th.index() + 1) + ')').filter('td, th'),
+			sortBy = th.data().sortBy,
+			sortedMap = [];
+
+		var unsortedValues = cells.map(function(idx, cell) {
+			if (sortBy)
+				return (typeof sortBy === 'function') ? sortBy($(th), $(cell), self) : sortBy;
+			return ($(this).data().sortValue != null ? $(this).data().sortValue : $(this).text());
+		});
+		if (unsortedValues.length === 0) return;
+
+		//click on a different column
+		if (this.index !== th.index()) {
+			this.direction = 'asc';
+			this.index = th.index();
+		}
+		else if (direction !== 'asc' && direction !== 'desc')
+			this.direction = this.direction === 'asc' ? 'desc' : 'asc';
+		else
+			this.direction = direction;
+
+		direction = this.direction == 'asc' ? 1 : -1;
+
+		self.$table.trigger('tablesort:start', [self]);
+		self.log("Sorting by " + this.index + ' ' + this.direction);
+
+		// Try to force a browser redraw
+		self.$table.css("display");
+		// Run sorting asynchronously on a timeout to force browser redraw after
+		// `tablesort:start` callback. Also avoids locking up the browser too much.
+		setTimeout(function() {
+			self.$sortCells.removeClass(self.settings.asc + ' ' + self.settings.desc);
+			for (var i = 0, length = unsortedValues.length; i < length; i++)
+			{
+				sortedMap.push({
+					index: i,
+					cell: cells[i],
+					row: rows[i],
+					value: unsortedValues[i]
+				});
+			}
+
+			sortedMap.sort(function(a, b) {
+				return self.settings.compare(a.value, b.value) * direction;
+			});
+
+			$.each(sortedMap, function(i, entry) {
+				rowsContainer.append(entry.row);
+			});
+
+			th.addClass(self.settings[self.direction]);
+
+			self.log('Sort finished in ' + ((new Date()).getTime() - start.getTime()) + 'ms');
+			self.$table.trigger('tablesort:complete', [self]);
+			//Try to force a browser redraw
+			self.$table.css("display");
+		}, unsortedValues.length > 2000 ? 200 : 10);
+	},
+
+	log: function(msg) {
+		if(($.tablesort.DEBUG || this.settings.debug) && console && console.log) {
+			console.log('[tablesort] ' + msg);
+		}
+	},
+
+	destroy: function() {
+		this.$sortCells.off('click.tablesort');
+		this.$table.data('tablesort', null);
+		return null;
+	}
+
+};
+
+$.tablesort.DEBUG = false;
+
+$.tablesort.defaults = {
+	debug: $.tablesort.DEBUG,
+	asc: 'sorted ascending',
+	desc: 'sorted descending',
+	compare: function(a, b) {
+		if (a > b) {
+			return 1;
+		} else if (a < b) {
+			return -1;
+		} else {
+			return 0;
+		}
+	}
+};
+
+$.fn.tablesort = function(settings) {
+	var table, sortable, previous;
+	return this.each(function() {
+		table = $(this);
+		previous = table.data('tablesort');
+		if(previous) {
+			previous.destroy();
+		}
+		table.data('tablesort', new $.tablesort(table, settings));
+	});
+};
+
+})(window.Zepto || window.jQuery);
 
 	</script>
 </head>
@@ -965,12 +1149,12 @@ function clearAllHodls() {
 			</div>
 			<div class="one column row">
 				<div class="column">
-					<table class="ui celled table">
+					<table id="mainTable" class="ui sortable selectable celled table">
 						<thead>
 							<tr>
-								<th class="center aligned">Coin</th>
-								<th class="center aligned">Hodlings</th>
-								<th class="center aligned single line">Fiat Price</th>
+								<th id="th0" class="center aligned">Coin</th>
+								<th id="th1" class="center aligned">Hodlings</th>
+								<th id="th2" class="center aligned single line">Fiat Price</th>
 								<th class="center aligned">Actions</th>
 							</tr>
 						</thead>
