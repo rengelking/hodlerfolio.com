@@ -95,7 +95,7 @@
 	<script>
 //global vars
 var prices,hodlingData,hodlingDataNew,fiat;
-var currentVersion="v1.0.2",latestVersion;
+var currentVersion="v1.0.3",latestVersion;
 
 var fiats=[
     {token:"$",symbol:"USD"},
@@ -1006,7 +1006,9 @@ $.tablesort.prototype = {
 
 		//click on a different column
 		if (this.index !== th.index()) {
-			this.direction = 'asc';
+			
+			console.log("CRAP this.index:"+this.index+"  th.index():"+th.index());
+			this.direction = (direction?direction:"asc");
 			this.index = th.index();
 		}
 		else if (direction !== 'asc' && direction !== 'desc')
@@ -1155,7 +1157,7 @@ $.fn.tablesort = function(settings) {
 								<th id="th0" class="center aligned">Coin</th>
 								<th id="th1" class="center aligned">Hodlings</th>
 								<th id="th2" class="center aligned single line">Fiat Price</th>
-								<th class="center aligned">Actions</th>
+								<th class="center aligned no-sort">Actions</th>
 							</tr>
 						</thead>
 						<tbody id="tbodyHodlings">
