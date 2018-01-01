@@ -95,7 +95,7 @@
 	<script>
 //global vars
 var prices,hodlingData,hodlingDataNew,fiat;
-var currentVersion="v1.0.3",latestVersion;
+var currentVersion="v1.0.4",latestVersion;
 
 var fiats=[
     {token:"$",symbol:"USD"},
@@ -633,7 +633,7 @@ function getHodlingData() {
 }
 
 function toCurrency(n) {
-	return (Number(n)).toLocaleString('en-US',{style:'decimal',maximumFractionDigits:2,minimumFractionDigits:2});
+	return (Number(n)).toLocaleString('en-US',{style:'decimal',maximumFractionDigits:(n<.01?6:2),minimumFractionDigits:2});
 }
 
 function coinDetails() {
@@ -665,7 +665,7 @@ function updateHodlingTable() {
 		var amount=parseFloat(hodling.amount);
 		var percentChange=parseFloat(price.percent_change_24h);
 		var amountInFiat=(priceInFiat*hodling.amount);
-		var amountInFiat24hrsAgo=amountInFiat*(1-percentChange/100);
+		var amountInFiat24hrsAgo=amountInFiat/(1+percentChange/100);
 		totalValue+=amountInFiat;
 		totalValue24hrsAgo+=amountInFiat24hrsAgo;
 		
@@ -785,7 +785,8 @@ function updateHodlingTable() {
 	
 	//show final total
 	spanTotalValue.textContent=fiat.token+toCurrency(totalValue);
-	var percentChange24hr=(totalValue24hrsAgo>0?(totalValue-totalValue24hrsAgo)/totalValue24hrsAgo:0);
+	var percentChange24hr=(totalValue24hrsAgo>0?(totalValue*100)/totalValue24hrsAgo-100:0);
+	console.log("totalValue24hrsAgo:"+totalValue24hrsAgo);
 	spanChange24hr.textContent=(percentChange24hr>=0?"+":"")+percentChange24hr.toFixed(2)+"%";
 	spanChange24hr.className="";
 	iconChange24hr.className="";
@@ -842,7 +843,7 @@ function updateUploadPreview() {
 		var amount=parseFloat(hodling.amount);
 		var percentChange=parseFloat(price.percent_change_24h);
 		var amountInFiat=(priceInFiat*hodling.amount);
-		var amountInFiat24hrsAgo=amountInFiat*(1-percentChange/100);
+		var amountInFiat24hrsAgo=amountInFiat/(1+percentChange/100);
 		
 		//new table row
 		tr=document.createElement("tr");
