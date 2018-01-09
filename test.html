@@ -95,7 +95,7 @@
 	<script>
 //global vars
 var prices,hodlingData,hodlingDataNew,fiat;
-var currentVersion="v1.0.4",latestVersion;
+var currentVersion="v1.0.5",latestVersion;
 
 var fiats=[
     {token:"$",symbol:"USD"},
@@ -197,24 +197,26 @@ function init() {
 		updateHodl(price,null);
 	});
 	
-	//get prices from coinmarketcap.com and hodlingData from browser storage
-	getPrices("USD",function(success) {
-		//check if got current prices
-		if(success) {
-			//load hodlingData if any
-			getHodlingData();
-			
-			//get fiat
-			fiat=fiats.find(obj=>obj.symbol===hodlingData.defaultFiat);
-			
-			//update tables
-			updateHodlingTable();
-			
-			//check for new version
-			//delete hodlingData.lastNotifiedVersion;
-			checkForNewVersion();
-		}
-	});
+	setTimeout(function() {
+		//get prices from coinmarketcap.com and hodlingData from browser storage
+		getPrices("USD",function(success) {
+			//check if got current prices
+			if(success) {
+				//load hodlingData if any
+				getHodlingData();
+				
+				//get fiat
+				fiat=fiats.find(obj=>obj.symbol===hodlingData.defaultFiat);
+				
+				//update tables
+				updateHodlingTable();
+				
+				//check for new version
+				//delete hodlingData.lastNotifiedVersion;
+				checkForNewVersion();
+			}
+		});
+	},1000);
 	
 
 	//search for hodl to add
@@ -296,6 +298,10 @@ function init() {
 	        	if(("defaultFiat" in json) && ("hodlings" in json)) {
 	        		//has properties so store in new buffer
 	        		hodlingDataNew=json;
+	        		
+	        		//update old hodlingData to include id of hodling, in case of duplicate symbols like GTC
+	        		upgradeHodlingData(hodlingDataNew);
+	        		
 	        		//preview the data
 	        		updateUploadPreview();
 	        	} else {
@@ -460,7 +466,7 @@ function updateHodl(price,hodlingsIndex) {
 		    	//check if this is a new hodl
 		    	if(hodlingsIndex==null) {
 		    		//add new hodl
-		    		var hodl={symbol:price.symbol,amount:amount};
+		    		var hodl={id:price.id,symbol:price.symbol,amount:amount};
 		    		hodlingData.hodlings.push(hodl);
 		    	} else {
 		    		//update existing hodl
@@ -545,7 +551,6 @@ function hodlConfirm(message,header,neg,pos,callback) {
 
 //get the latest prices
 function getPrices(fiat,callback) {
-	//add all instruments from BitMex api
 	var url="https://api.coinmarketcap.com/v1/ticker/?limit=0"+(fiat=="USD"?"":"&convert="+fiat);
 	var req=new XMLHttpRequest();
 
@@ -568,7 +573,6 @@ function getPrices(fiat,callback) {
 
 //get the latest tagged versions
 function getVersions(callback) {
-	//add all instruments from BitMex api
 	var url="https://api.github.com/repos/rengelking/hodlerfolio.com/tags";
 	var req=new XMLHttpRequest();
 
@@ -629,6 +633,68 @@ function getHodlingData() {
 	} else {
 		//parse JSON into object
 		hodlingData=JSON.parse(hodlingData);
+		
+		//update old hodlingData to include id of hodling, in case of duplicate symbols like GTC
+		upgradeHodlingData();
+	}
+}
+
+function upgradeHodlingData(previewData) {
+	var data,doSave=false,missingIds=false;
+	
+	//check if data param included
+	if(!previewData) {
+		data=hodlingData;
+		//save the data after updating if it needs updating, as it is the main data
+		doSave=true;
+	} else {
+		//use preview data
+		data=previewData;
+	}
+	
+	//update old hodlingData to include id of hodling, in case of duplicate symbols like GTC
+	var duplicateSymbols=[];
+	for(var i=0,hodlings=data.hodlings;i<hodlings.length;i++) {
+		//get this hodling
+		var hodling=hodlings[i];
+		
+		
+		console.log("hodling:"+JSON.stringify(hodling));
+		//check if id exists and if not, then add the id
+		if(!("id" in hodling)) {
+			//look up this id
+			//get the price data for this hodling
+			var price=prices.find(obj=>obj.symbol===hodling.symbol);
+			
+			//count duplicate symbols if they exist
+			var count=0;
+			prices.find(function (obj) {
+				if(obj.symbol===hodling.symbol) count++;
+				return false; 
+			});
+			
+			//add duplicate symbol to the list
+			if(count>1) {
+				duplicateSymbols.push(hodling.symbol);
+			}
+			
+			//set the id for this hodling
+			hodling.id=price.id;
+			
+			//flag to save later
+			missingIds=true;
+		}
+	}
+	
+	//show notice if there are duplicate hodling data symbols
+	if(duplicateSymbols.length>0) {
+		hodlAlert("The following coin symbols are also being used with other coins.  Please check that you have the correct coin entered for:<br>"+duplicateSymbols.join(", ")+"</br>");
+	}
+	
+	//save if main data and ids were missing
+	if(doSave && missingIds) {
+		//store these settings
+		localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
 	}
 }
 
@@ -658,7 +724,7 @@ function updateHodlingTable() {
 		var hodling=hodlings[i];
 		
 		//get the price data for this hodling
-		var price=prices.find(obj=>obj.symbol===hodling.symbol);
+		var price=prices.find(obj=>obj.id===hodling.id);
 		
 		//get amount in fiat
 		var priceInFiat=parseFloat(price.price_usd);
@@ -836,7 +902,7 @@ function updateUploadPreview() {
 		var hodling=hodlings[i];
 		
 		//get the price data for this hodling
-		var price=prices.find(obj=>obj.symbol===hodling.symbol);
+		var price=prices.find(obj=>obj.id===hodling.id);
 		
 		//get amount in fiat
 		var priceInFiat=parseFloat(price.price_usd);
