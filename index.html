@@ -95,7 +95,7 @@
 	<script>
 //global vars
 var prices,hodlingData,hodlingDataNew,fiat;
-var currentVersion="v1.0.5",latestVersion;
+var currentVersion="v1.0.6",latestVersion;
 
 var fiats=[
     {token:"$",symbol:"USD"},
@@ -553,6 +553,10 @@ function hodlConfirm(message,header,neg,pos,callback) {
 function getPrices(fiat,callback) {
 	var url="https://api.coinmarketcap.com/v1/ticker/?limit=0"+(fiat=="USD"?"":"&convert="+fiat);
 	var req=new XMLHttpRequest();
+	var timerId,percent=0;
+	
+	
+
 
 	req.onreadystatechange=function(e) {
 		if(req.readyState==4) {
@@ -565,10 +569,30 @@ function getPrices(fiat,callback) {
 			console.log(req.responseText);
 		}
 	}
+	
+	//not responding try again after 5 seconds so try again
+	req.ontimeout=function(e) {
+		//stop progress timer if not already stopped
+		clearInterval(timerId);
+		getPrices(fiat,callback);
+	}
 
+	req.timeout=5000;
 	req.open("GET",url,true);
 	req.setRequestHeader("Accept","application/json");
 	req.send(null);
+	
+	//set progress bar to 0, and start 5 second timer for countdown to retry
+	timerId=setInterval(function() {
+		$("#progressRetry").progress({
+	  		percent: percent
+		});
+		percent+=10;
+		if(percent>100) {
+			clearInterval(timerId);
+			percent=100;
+		}
+	},500)
 }
 
 //get the latest tagged versions
@@ -1230,7 +1254,18 @@ $.fn.tablesort = function(settings) {
 						<tbody id="tbodyHodlings">
 							<tr>
 								<td colspan="4" class="center aligned">
-									<div class="ui active centered inline medium text loader">Retrieving latest prices, please wait...</div>
+									<div class="ui segment">
+										<div class="ui active centered inline medium text loader">
+											<div class="ui text loader"></div>
+										</div>
+										<p>Retrieving latest prices, please wait...</p>
+									</div>
+									<div class="ui indicating progress" id="progressRetry">
+										<div class="bar">
+											<div class="progress"></div>
+										</div>
+										<div class="label">Time until retry</div>
+									</div>
 								</td>
 							</tr>
 						</tbody>
