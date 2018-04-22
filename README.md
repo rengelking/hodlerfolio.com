@@ -19,4 +19,4 @@ https://hodlerfolio.com/index.html
 - LTC - MN5XE4cxEKRUXCD5t2mztUmzD2fcLydPCt
 - ZEC - t1dBdzFWdGmSxYi9LWbj38ugKc8tcGEBXfh
 
-
+![Screenshot](https://raw.githubusercontent.com/rengelking/hodlerfolio.com/master/screenshot1.png)
