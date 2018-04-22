@@ -95,7 +95,8 @@
 	<script>
 //global vars
 var prices,hodlingData,hodlingDataNew,fiat,imageData;
-var currentVersion="v1.0.7",latestVersion;
+var currentVersion="v1.0.8",latestVersion;
+var imageUrlroot="s2.coinmarketcap.com/static/img/coins";
 
 var fiats=[
     {token:"$",symbol:"USD"},
@@ -137,6 +138,7 @@ var modalCoinHeader,modalCoinImage,modalCoinPrompt,modalCryptoSign,modalCryptoSy
 var modalAlertHeader,modalAlertMessage,modalConfirmHeader,modalConfirmMessage,modalConfirmNeg,modalConfirmPos;
 var clearAll,donate,btnSave,btnUpload,btnConfigure,btnHelp;
 var hodler,spanVersion;
+
 
 //called on page load
 function init() {
@@ -265,7 +267,7 @@ function init() {
            	//returns results html for standard results
             var html="";
             Object.keys(response.results).forEach(function(key) {
-                  html+='<a class="result"><img src="https://files.coinmarketcap.com/static/img/coins/32x32/'+response.results[key].img+'"><div class="content menuItem"><div class="title">' + response.results[key].name + '</div><div class="description">' + response.results[key].symbol + '</div></div></a>';
+                  html+='<a class="result"><img src="https://'+imageUrlroot+'/32x32/'+response.results[key].img+'"><div class="content menuItem"><div class="title">' + response.results[key].name + '</div><div class="description">' + response.results[key].symbol + '</div></div></a>';
             });
             return html;
           }
@@ -449,7 +451,7 @@ function updateHodl(price,hodlingsIndex) {
 		modalHodlAmount.value=hodlingData.hodlings[hodlingsIndex].amount;
 	}
 	modalCoinHeader.textContent=price.name;
-	modalCoinImage.src="https://files.coinmarketcap.com/static/img/coins/128x128/"+price.img+"?t="+(new Date()/1000);
+	modalCoinImage.src="https://"+imageUrlroot+"/128x128/"+price.img+"?t="+(new Date()/1000);
 	modalCoinPrompt.textContent=price.name;
 	modalCryptoSign.textContent=price.symbol;
 	
@@ -830,7 +832,7 @@ function updateHodlingTable() {
 		td.classList.add("center","aligned");
 		//coin image
 		img=document.createElement("img");
-		img.src="https://files.coinmarketcap.com/static/img/coins/32x32/"+price.img;
+		img.src="https://"+imageUrlroot+"/32x32/"+price.img;
 		img.alt=price.name;
 		td.appendChild(img);
 		//br line break
@@ -1004,7 +1006,7 @@ function updateUploadPreview() {
 		td.classList.add("center","aligned");
 		//coin image
 		img=document.createElement("img");
-		img.src="https://files.coinmarketcap.com/static/img/coins/32x32/"+price.img;
+		img.src="https://"+imageUrlroot+"/32x32/"+price.img;
 		img.alt=price.name;
 		td.appendChild(img);
 		//br line break
@@ -1433,37 +1435,37 @@ $.fn.tablesort = function(settings) {
 			
 			<div id="donateLinks" class="ui grid">
 				<div class="one wide column middle aligned">
-					<img src="https://files.coinmarketcap.com/static/img/coins/32x32/bitcoin.png">
+					<img src="https://"+imageUrlroot+"/32x32/bitcoin.png">
 				</div>
 				<div class="four wide column middle aligned">Donate BTC:</div>
 				<div class="eleven wide column middle aligned">3QVqQ7MSM8Noyg3A224jefbixV9VVgfxgw</div>
 				<div class="one wide column middle aligned">
-					<img src="https://files.coinmarketcap.com/static/img/coins/32x32/ethereum.png">
+					<img src="https://"+imageUrlroot+"/32x32/ethereum.png">
 				</div>
 				<div class="four wide column middle aligned">Donate ETH:</div>
 				<div class="eleven wide column middle aligned">0x3Be6aD6DA03B1e5b4082E8A08E2CDaf79422f8d1</div>
 				<div class="one wide column middle aligned">
-					<img src="https://files.coinmarketcap.com/static/img/coins/32x32/ethereum-classic.png">
+					<img src="https://"+imageUrlroot+"/32x32/ethereum-classic.png">
 				</div>
 				<div class="four wide column middle aligned">Donate ETC:</div>
 				<div class="eleven wide column middle aligned">0x81792efc25aa2AC4DE08dCc9D35325f4d7288781</div>
 				<div class="one wide column middle aligned">
-					<img src="https://files.coinmarketcap.com/static/img/coins/32x32/bitcoin-cash.png">
+					<img src="https://"+imageUrlroot+"/32x32/bitcoin-cash.png">
 				</div>
 				<div class="four wide column middle aligned">Donate BCH:</div>
 				<div class="eleven wide column middle aligned">12Ki8CJ246BX5NMtWoVF5eAH7VKbrXfMq2</div>
 				<div class="one wide column middle aligned">
-					<img src="https://files.coinmarketcap.com/static/img/coins/32x32/dash.png">
+					<img src="https://"+imageUrlroot+"/32x32/dash.png">
 				</div>
 				<div class="four wide column middle aligned">Donate DASH:</div>
 				<div class="eleven wide column middle aligned">Xjxua1BYm57KoXpXch8p9bnDPEHC95yc9B</div>
 				<div class="one wide column middle aligned">
-					<img src="https://files.coinmarketcap.com/static/img/coins/32x32/litecoin.png">
+					<img src="https://"+imageUrlroot+"/32x32/litecoin.png">
 				</div>
 				<div class="four wide column middle aligned">Donate LTC:</div>
 				<div class="eleven wide column middle aligned">MN5XE4cxEKRUXCD5t2mztUmzD2fcLydPCt</div>
 				<div class="one wide column middle aligned">
-					<img src="https://files.coinmarketcap.com/static/img/coins/32x32/zcash.png">
+					<img src="https://"+imageUrlroot+"/32x32/zcash.png">
 				</div>
 				<div class="four wide column middle aligned">Donate ZEC:</div>
 				<div class="eleven wide column middle aligned">t1dBdzFWdGmSxYi9LWbj38ugKc8tcGEBXfh</div>
