@@ -105,7 +105,7 @@
 	<title>Hodler Folio</title>
 	<script>
 //global vars
-var prices,pricesBTC,hodlingData,hodlingDataNew,fiat;
+var prices=[],pricesBTC=[],hodlingData,hodlingDataNew,fiat;
 var currentVersion="v1.1.3",latestVersion;
 
 var fiats=[
@@ -213,12 +213,12 @@ function init() {
 	
 	setTimeout(function() {
 		//get prices from coingecko.com and hodlingData from browser storage
-		getPrices("btc",function(success) {
+		getPrices(1,"btc",function(success) {
 			//check if got current prices
 			if(success) {
 				console.log("success BTC!");
 				
-				getPrices("usd",function(success) {
+				getPrices(1,"usd",function(success) {
 					//check if got current prices
 					if(success) {
 						console.log("success USD!");
@@ -580,23 +580,41 @@ function hodlConfirm(message,header,neg,pos,callback) {
 }
 
 //get the latest prices
-function getPrices(fiat,callback) {
+function getPrices(page,fiat,callback) {
 	//var url="https://api.coinmarketcap.com/v1/ticker/?limit=0"+(fiat=="USD"?"":"&convert="+fiat);
-	var url="https://api.coingecko.com/api/v3/coins/markets?vs_currency="+fiat+"&order=market_cap_desc&per_page=250&page=1&sparkline=false";
+	var url="https://api.coingecko.com/api/v3/coins/markets?vs_currency="+fiat+"&order=market_cap_desc&per_page=250&page="+page+"&sparkline=false";
 	var req=new XMLHttpRequest();
 	var timerId,percent=0;
 
 	req.onreadystatechange=function(e) {
 		if(req.readyState==4) {
+			//clear progress timer
+			clearInterval(timerId);
 			if(req.status==200) {
 				console.log("prices:"+req.responseText);
-				if(fiat=="usd") {
-					prices=JSON.parse(req.responseText);
+				var newPrices=JSON.parse(req.responseText);
+				//check if page is empty
+				if(newPrices.length) {
+					if(fiat=="usd") {
+						prices=prices.concat(newPrices);
+					} else {
+						pricesBTC=pricesBTC.concat(newPrices);
+					}
+					//update percentage bar
+					percent=(prices.length+pricesBTC.length)/100;
+					$("#progressRetry").progress({
+				  		percent: percent
+					});
+					
+					//get next page
+					 getPrices(page+1,fiat,callback);
 				} else {
-					pricesBTC=JSON.parse(req.responseText);
+					//page is empty so do callback
+					callback(true);
 				}
-				callback(true);
+				
 			} else {
+				//failed so callback with error
 				callback(false);
 			}
 			console.log(req.responseText);
@@ -606,8 +624,8 @@ function getPrices(fiat,callback) {
 	//not responding try again after 5 seconds so try again
 	req.ontimeout=function(e) {
 		//stop progress timer if not already stopped
-		clearInterval(timerId);
-		getPrices(fiat,callback);
+/* 		clearInterval(timerId); */
+		getPrices(page,fiat,callback);
 	}
 
 	req.timeout=5000;
@@ -616,7 +634,7 @@ function getPrices(fiat,callback) {
 	req.send(null);
 	
 	//set progress bar to 0, and start 5 second timer for countdown to retry
-	timerId=setInterval(function() {
+/* 	timerId=setInterval(function() {
 		$("#progressRetry").progress({
 	  		percent: percent
 		});
@@ -625,7 +643,7 @@ function getPrices(fiat,callback) {
 			clearInterval(timerId);
 			percent=100;
 		}
-	},500)
+	},500) */
 }
 
 //get the latest tagged versions
@@ -1240,7 +1258,7 @@ $.fn.tablesort = function(settings) {
 			<h1>
 				<span class="quote">"...to have and to hodl, until death do us part"</span>
 			</h1>
-			<div style="color: #6435c9;">&bull;&nbsp;Open source (<a href="https://github.com/rengelking/hodlerfolio.com" target="_blank">GitHub</a>)&nbsp;&nbsp;&nbsp;&bull;&nbsp;Single HTML file, can run from your desktop&nbsp;&nbsp;&nbsp;&bull;&nbsp;You track your portfolio, no one tracks you!</div>
+			<div style="color: #6435c9;">&bull;&nbsp;Open source (<a href="https://github.com/rengelking/hodlerfolio.com" target="_blank">GitHub</a>)&nbsp;&nbsp;&nbsp;&bull;&nbsp;Single HTML file, can run from your desktop&nbsp;&nbsp;&nbsp;&bull;&nbsp;You track your portfolio, no one tracks you!&nbsp;&nbsp;&nbsp;&bull;&nbsp;Data provided by <a href="https://www.coingecko.com" target="_blank">CoinGecko</a></div>
 		</div>
 		<div class="ui violet inverted menu">
 			<a class="header item">Hodlerfolio&nbsp;&nbsp;<span id="spanVersion"></span></a>
@@ -1299,7 +1317,7 @@ $.fn.tablesort = function(settings) {
 										<div class="bar">
 											<div class="progress"></div>
 										</div>
-										<div class="label">Time until retry</div>
+										<div class="label">Watch a new <a href="https://www.youtube.com/user/aantonop/videos" target="_blank">Andreas Antonopolous video</a> while waiting</div>
 									</div>
 								</td>
 							</tr>
