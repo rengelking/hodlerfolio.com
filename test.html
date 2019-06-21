@@ -105,8 +105,8 @@
 	<title>Hodler Folio</title>
 	<script>
 //global vars
-var prices=[],pricesBTC=[],hodlingData,hodlingDataNew,fiat;
-var currentVersion="v1.1.3",latestVersion;
+var prices=[],pricesBTC=[],hodlingData,hodlingDataNew,fiat,dataLoaded=false,dataBTCLoaded=false,initPart2Started=false;
+var currentVersion="v1.2.0",latestVersion;
 
 var fiats=[
     {token:"$",symbol:"USD"},
@@ -217,29 +217,27 @@ function init() {
 			//check if got current prices
 			if(success) {
 				console.log("success BTC!");
-				
-				getPrices(1,"usd",function(success) {
-					//check if got current prices
-					if(success) {
-						console.log("success USD!");
-						
-						//load hodlingData if any
-						getHodlingData();
-						
-						//get fiat
-						fiat=fiats.find(obj=>obj.symbol===hodlingData.defaultFiat);
-						
-						//update tables
-						updateHodlingTable();
-						
-						//check for new version
-						//delete hodlingData.lastNotifiedVersion;
-						checkForNewVersion();
-					}
-				});
+				dataBTCLoaded=true;
+				//continue initialization if all data loaded
+				if(dataLoaded && !initPart2Started) {
+					initPart2Started=true;
+					initPart2();
+				}
 			}
 		});
-
+		
+		getPrices(1,"usd",function(success) {
+			//check if got current prices
+			if(success) {
+				console.log("success USD!");
+				dataLoaded=true;
+				//continue initialization if all data loaded
+				if(dataBTCLoaded && !initPart2Started) {
+					initPart2Started=true;
+					initPart2();
+				}
+			}
+		});
 	},10);
 	
 
@@ -281,7 +279,6 @@ function init() {
            	//returns results html for standard results
             var html="";
             Object.keys(response.results).forEach(function(key) {
-                 // html+='<a class="result"><img src="https://'+imageUrlroot+'/32x32/'+response.results[key].img+'"><div class="content menuItem"><div class="title">' + response.results[key].name + '</div><div class="description">' + response.results[key].symbol + '</div></div></a>';
                   html+='<a class="result"><img style="width:32px;height:32px;" src="'+response.results[key].image.replace("large","small")+'"><div class="content menuItem"><div class="title">' + response.results[key].name + '</div><div class="description">' + response.results[key].symbol.toUpperCase() + '</div></div></a>';
             });
             return html;
@@ -356,6 +353,21 @@ function init() {
     	//save to storage
 		localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
 	});
+}
+
+function initPart2() {
+	//load hodlingData if any
+	getHodlingData();
+	
+	//get fiat
+	fiat=fiats.find(obj=>obj.symbol===hodlingData.defaultFiat);
+	
+	//update tables
+	updateHodlingTable();
+	
+	//check for new version
+	//delete hodlingData.lastNotifiedVersion;
+	checkForNewVersion();
 }
 
 function checkForNewVersion() {
@@ -584,12 +596,10 @@ function getPrices(page,fiat,callback) {
 	//var url="https://api.coinmarketcap.com/v1/ticker/?limit=0"+(fiat=="USD"?"":"&convert="+fiat);
 	var url="https://api.coingecko.com/api/v3/coins/markets?vs_currency="+fiat+"&order=market_cap_desc&per_page=250&page="+page+"&sparkline=false";
 	var req=new XMLHttpRequest();
-	var timerId,percent=0;
+	var percent;
 
 	req.onreadystatechange=function(e) {
 		if(req.readyState==4) {
-			//clear progress timer
-			clearInterval(timerId);
 			if(req.status==200) {
 				console.log("prices:"+req.responseText);
 				var newPrices=JSON.parse(req.responseText);
@@ -623,8 +633,6 @@ function getPrices(page,fiat,callback) {
 	
 	//not responding try again after 5 seconds so try again
 	req.ontimeout=function(e) {
-		//stop progress timer if not already stopped
-/* 		clearInterval(timerId); */
 		getPrices(page,fiat,callback);
 	}
 
@@ -632,18 +640,6 @@ function getPrices(page,fiat,callback) {
 	req.open("GET",url,true);
 	req.setRequestHeader("Accept","application/json");
 	req.send(null);
-	
-	//set progress bar to 0, and start 5 second timer for countdown to retry
-/* 	timerId=setInterval(function() {
-		$("#progressRetry").progress({
-	  		percent: percent
-		});
-		percent+=10;
-		if(percent>100) {
-			clearInterval(timerId);
-			percent=100;
-		}
-	},500) */
 }
 
 //get the latest tagged versions
@@ -1430,37 +1426,37 @@ $.fn.tablesort = function(settings) {
 			
 			<div id="donateLinks" class="ui grid">
 				<div class="one wide column middle aligned">
-					<img src="https://"+imageUrlroot+"/32x32/bitcoin.png">
+					<img src="https://assets.coingecko.com/coins/images/1/thumb/bitcoin.png">
 				</div>
 				<div class="four wide column middle aligned">Donate BTC:</div>
 				<div class="eleven wide column middle aligned">3QVqQ7MSM8Noyg3A224jefbixV9VVgfxgw</div>
 				<div class="one wide column middle aligned">
-					<img src="https://"+imageUrlroot+"/32x32/ethereum.png">
+					<img src="https://assets.coingecko.com/coins/images/279/thumb/ethereum.png">
 				</div>
 				<div class="four wide column middle aligned">Donate ETH:</div>
 				<div class="eleven wide column middle aligned">0x3Be6aD6DA03B1e5b4082E8A08E2CDaf79422f8d1</div>
 				<div class="one wide column middle aligned">
-					<img src="https://"+imageUrlroot+"/32x32/ethereum-classic.png">
+					<img src="https://assets.coingecko.com/coins/images/453/thumb/ethereum-classic-logo.png">
 				</div>
 				<div class="four wide column middle aligned">Donate ETC:</div>
 				<div class="eleven wide column middle aligned">0x81792efc25aa2AC4DE08dCc9D35325f4d7288781</div>
 				<div class="one wide column middle aligned">
-					<img src="https://"+imageUrlroot+"/32x32/bitcoin-cash.png">
+					<img src="https://assets.coingecko.com/coins/images/780/thumb/bitcoin_cash.png">
 				</div>
 				<div class="four wide column middle aligned">Donate BCH:</div>
 				<div class="eleven wide column middle aligned">12Ki8CJ246BX5NMtWoVF5eAH7VKbrXfMq2</div>
 				<div class="one wide column middle aligned">
-					<img src="https://"+imageUrlroot+"/32x32/dash.png">
+					<img src="https://assets.coingecko.com/coins/images/19/thumb/dash-logo.png">
 				</div>
 				<div class="four wide column middle aligned">Donate DASH:</div>
 				<div class="eleven wide column middle aligned">Xjxua1BYm57KoXpXch8p9bnDPEHC95yc9B</div>
 				<div class="one wide column middle aligned">
-					<img src="https://"+imageUrlroot+"/32x32/litecoin.png">
+					<img src="https://assets.coingecko.com/coins/images/2/thumb/litecoin.png">
 				</div>
 				<div class="four wide column middle aligned">Donate LTC:</div>
 				<div class="eleven wide column middle aligned">MN5XE4cxEKRUXCD5t2mztUmzD2fcLydPCt</div>
 				<div class="one wide column middle aligned">
-					<img src="https://"+imageUrlroot+"/32x32/zcash.png">
+					<img src="https://assets.coingecko.com/coins/images/486/thumb/circle-zcash-color.png">
 				</div>
 				<div class="four wide column middle aligned">Donate ZEC:</div>
 				<div class="eleven wide column middle aligned">t1dBdzFWdGmSxYi9LWbj38ugKc8tcGEBXfh</div>
