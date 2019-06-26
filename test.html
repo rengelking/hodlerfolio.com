@@ -106,7 +106,7 @@
 	<script>
 //global vars
 var prices=[],pricesBTC=[],hodlingData,hodlingDataNew,fiat,dataLoaded=false,dataBTCLoaded=false,initPart2Started=false;
-var currentVersion="v1.2.1",latestVersion;
+var currentVersion="v1.2.2",latestVersion;
 
 var fiats=[
     {token:"$",symbol:"USD"},
@@ -712,7 +712,7 @@ function toCurrency(n) {
 }
 
 function coinDetails() {
-	window.open("https://coinmarketcap.com/currencies/"+this.dataset.id,"_blank");
+	window.open("https://www.coingecko.com/en/coins/"+this.dataset.id,"_blank");
 }
 
 function updateHodlingTable() {
