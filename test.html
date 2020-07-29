@@ -616,8 +616,13 @@ function getPrices(page,fiat,callback) {
 				  		percent: percent
 					});
 					
-					//get next page
-					 getPrices(page+1,fiat,callback);
+					if(page>20) {
+						//limit to 20 pages for throttling
+						callback(true);
+					} else {
+						//get next page
+						 getPrices(page+1,fiat,callback);
+					}
 				} else {
 					//page is empty so do callback
 					callback(true);

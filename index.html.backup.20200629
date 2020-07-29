@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"> -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.css">
+	<link href="https://fonts.googleapis.com/css?family=Dancing+Script|Princess+Sofia" rel="stylesheet">  
+	<style>
+	body {
+		margin-top: 2.5em;
+	}
+	.fiatAmount, .price {
+		font-weight:bold;
+		font-size:larger;
+	}
+	.pointer {
+		cursor:pointer;
+	}
+	.fiatAmount {
+		color:green;
+	}
+	.btcAmount {
+		color:#ff9f00;
+	}
+	td.padRight {
+		padding-right:1.5em !important;
+	}
+	span.price {
+		position:relative;
+	}
+	span.price i {
+		position:absolute;
+		left:100%;
+	}
+	.priceUp {
+		color:green;
+	}
+	.priceDown {
+		color:red;
+	}
+	#spanTotalValue {
+		font-weight:bold;
+		font-size:3em;
+		color:green;
+	}
+	#spanTotalValueBTC {
+		font-weight:bold;
+		font-size:3em;
+		color:#ff9f00;
+	}	
+	#spanChange24hr, #iconChange24hr {
+		font-weight:bold;
+		font-size:1.5em;
+	}
+	.gray {
+		color:gray !important;
+	}
+	.menuItem {
+		display: inline-block;
+		margin-left: .5em;
+		vertical-align: top;
+	}
+	.logo {
+		font-family: 'Princess Sofia', cursive;
+		font-size: 64px;
+		font-weight: bold;
+		color: #6435c9;
+	}
+	#hoderific {
+		font-weight: bold;
+		color: #6435c9;
+	}
+	.quote {
+		font-style:italic;
+	}
+	.ui.search .prompt {
+		border-radius: .28571429rem;
+	}
+	.action {
+		font-size:1.25em;
+		cursor:pointer;
+	}
+	#donateLinks {
+		font-weight:bold;
+	}
+	#donateLinks img {
+		margin-top:6px;
+	}
+	.hide {
+		display:none;
+	}
+	th.sorted.ascending:after {
+		content: "  \2191";
+	}
+	
+	th.sorted.descending:after {
+		content: " \2193";
+	}
+	
+	#hodler { border: 10px dashed #ccc; width: 470px; height: 300px; margin: 20px auto; overflow-y: auto;}
+	#hodler.hover { border: 10px dashed #333; }
+	</style>
+	<script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.js"></script>
+	<title>Hodler Folio</title>
+	<script>
+//global vars
+var prices,hodlingData,hodlingDataNew,fiat;
+var currentVersion="v1.1.3",latestVersion;
+var imageUrlroot="s2.coinmarketcap.com/static/img/coins";
+var imageData=[{"id":"bitcoin","img":"1.png"},{"id":"ethereum","img":"1027.png"},{"id":"napoleonx","img":"2602.png"},{"id":"ripple","img":"52.png"},{"id":"bitcoin-cash","img":"1831.png"},{"id":"litecoin","img":"2.png"},{"id":"cardano","img":"2010.png"},{"id":"neo","img":"1376.png"},{"id":"stellar","img":"512.png"},{"id":"eos","img":"1765.png"},{"id":"dash","img":"131.png"},{"id":"iota","img":"1720.png"},{"id":"monero","img":"328.png"},{"id":"nem","img":"873.png"},{"id":"ethereum-classic","img":"1321.png"},{"id":"vechain","img":"1904.png"},{"id":"tron","img":"1958.png"},{"id":"lisk","img":"1214.png"},{"id":"tether","img":"825.png"},{"id":"bitcoin-gold","img":"2083.png"},{"id":"qtum","img":"1684.png"},{"id":"omisego","img":"1808.png"},{"id":"nano","img":"1567.png"},{"id":"icon","img":"2099.png"},{"id":"zcash","img":"1437.png"},{"id":"binance-coin","img":"1839.png"},{"id":"verge","img":"693.png"},{"id":"steem","img":"1230.png"},{"id":"bytecoin-bcn","img":"372.png"},{"id":"populous","img":"1789.png"},{"id":"stratis","img":"1343.png"},{"id":"dogecoin","img":"74.png"},{"id":"siacoin","img":"1042.png"},{"id":"rchain","img":"2021.png"},{"id":"waves","img":"1274.png"},{"id":"status","img":"1759.png"},{"id":"digixdao","img":"1229.png"},{"id":"maker","img":"1518.png"},{"id":"bitshares","img":"463.png"},{"id":"aeternity","img":"1700.png"},{"id":"waltonchain","img":"1925.png"},{"id":"decred","img":"1168.png"},{"id":"augur","img":"1104.png"},{"id":"0x","img":"1896.png"},{"id":"veritaseum","img":"1710.png"},{"id":"zclassic","img":"1447.png"},{"id":"electroneum","img":"2137.png"},{"id":"revain","img":"2135.png"},{"id":"ardor","img":"1320.png"},{"id":"komodo","img":"1521.png"},{"id":"hshare","img":"1903.png"},{"id":"kucoin-shares","img":"2087.png"},{"id":"ark","img":"1586.png"},{"id":"gas","img":"1785.png"},{"id":"basic-attention-token","img":"1697.png"},{"id":"zilliqa","img":"2469.png"},{"id":"dragonchain","img":"2243.png"},{"id":"digibyte","img":"109.png"},{"id":"bytom","img":"1866.png"},{"id":"loopring","img":"1934.png"},{"id":"syscoin","img":"541.png"},{"id":"cryptonex","img":"2027.png"},{"id":"monacoin","img":"213.png"},{"id":"polymath-network","img":"2496.png"},{"id":"aelf","img":"2299.png"},{"id":"dent","img":"1886.png"},{"id":"qash","img":"2213.png"},{"id":"pivx","img":"1169.png"},{"id":"kyber-network","img":"1982.png"},{"id":"nebulas-token","img":"1908.png"},{"id":"reddcoin","img":"118.png"},{"id":"aion","img":"2062.png"},{"id":"golem-network-tokens","img":"1455.png"},{"id":"dentacoin","img":"1876.png"},{"id":"bitcore","img":"1654.png"},{"id":"byteball","img":"1492.png"},{"id":"ethos","img":"1817.png"},{"id":"gxshares","img":"1750.png"},{"id":"iostoken","img":"2405.png"},{"id":"factom","img":"1087.png"},{"id":"funfair","img":"1757.png"},{"id":"chainlink","img":"1975.png"},{"id":"zcoin","img":"1414.png"},{"id":"power-ledger","img":"2132.png"},{"id":"salt","img":"1996.png"},{"id":"cindicator","img":"2043.png"},{"id":"nxt","img":"66.png"},{"id":"pillar","img":"1834.png"},{"id":"kin","img":"1993.png"},{"id":"particl","img":"1826.png"},{"id":"request-network","img":"2071.png"},{"id":"bancor","img":"1727.png"},{"id":"maidsafecoin","img":"291.png"},{"id":"enigma-project","img":"2044.png"},{"id":"smartcash","img":"1828.png"},{"id":"vertcoin","img":"99.png"},{"id":"neblio","img":"1955.png"},{"id":"tenx","img":"1758.png"},{"id":"emercoin","img":"558.png"},{"id":"gamecredits","img":"576.png"},{"id":"raiden-network-token","img":"2161.png"},{"id":"ignis","img":"2276.png"},{"id":"blocknet","img":"707.png"},{"id":"quantstamp","img":"2212.png"},{"id":"gnosis-gno","img":"1659.png"},{"id":"wax","img":"2300.png"},{"id":"iconomi","img":"1408.png"},{"id":"singularitynet","img":"2424.png"},{"id":"digitalnote","img":"405.png"},{"id":"poet","img":"1937.png"},{"id":"enjin-coin","img":"2130.png"},{"id":"santiment","img":"1807.png"},{"id":"experience-points","img":"1367.png"},{"id":"supernet-unity","img":"643.png"},{"id":"skycoin","img":"1619.png"},{"id":"storj","img":"1772.png"},{"id":"bitcoindark","img":"467.png"},{"id":"civic","img":"1816.png"},{"id":"substratum","img":"1984.png"},{"id":"storm","img":"2297.png"},{"id":"nexus","img":"789.png"},{"id":"ethlend","img":"2239.png"},{"id":"decentraland","img":"1966.png"},{"id":"achain","img":"1918.png"},{"id":"adx-net","img":"1768.png"},{"id":"nav-coin","img":"377.png"},{"id":"zencash","img":"1698.png"},{"id":"bridgecoin","img":"2033.png"},{"id":"oyster","img":"2202.png"},{"id":"dynamic-trading-rights","img":"2298.png"},{"id":"xpa","img":"1968.png"},{"id":"dew","img":"2304.png"},{"id":"telcoin","img":"2394.png"},{"id":"high-performance-blockchain","img":"2345.png"},{"id":"medibloc","img":"2303.png"},{"id":"ucash","img":"2512.png"},{"id":"blockv","img":"2223.png"},{"id":"aragon","img":"1680.png"},{"id":"ubiq","img":"588.png"},{"id":"time-new-bank","img":"2235.png"},{"id":"monaco","img":"1776.png"},{"id":"red-pulse","img":"2112.png"},{"id":"sophiatx","img":"2309.png"},{"id":"medishares","img":"2274.png"},{"id":"pura","img":"870.png"},{"id":"iot-chain","img":"2251.png"},{"id":"bluzelle","img":"2505.png"},{"id":"rlc","img":"1637.png"},{"id":"paypie","img":"2036.png"},{"id":"data","img":"2446.png"},{"id":"ink","img":"2209.png"},{"id":"bibox-token","img":"2307.png"},{"id":"vibe","img":"1983.png"},{"id":"genesis-vision","img":"2181.png"},{"id":"asch","img":"1609.png"},{"id":"peercoin","img":"5.png"},{"id":"c20","img":"2444.png"},{"id":"metal","img":"1788.png"},{"id":"amber","img":"2081.png"},{"id":"wagerr","img":"1779.png"},{"id":"sonm","img":"1723.png"},{"id":"deepbrain-chain","img":"2316.png"},{"id":"appcoins","img":"2344.png"},{"id":"agoras-tokens","img":"1037.png"},{"id":"xtrabytes","img":"1636.png"},{"id":"theta-token","img":"2416.png"},{"id":"sirin-labs-token","img":"2313.png"},{"id":"airswap","img":"2058.png"},{"id":"ripio-credit-network","img":"2096.png"},{"id":"jibrel-network","img":"2498.png"},{"id":"eidoo","img":"2057.png"},{"id":"einsteinium","img":"201.png"},{"id":"cybermiles","img":"2246.png"},{"id":"wabi","img":"2267.png"},{"id":"etherparty","img":"2120.png"},{"id":"simple-token","img":"2296.png"},{"id":"minexcoin","img":"2139.png"},{"id":"melon","img":"1552.png"},{"id":"html-coin","img":"2315.png"},{"id":"streamr-datacoin","img":"2143.png"},{"id":"wepower","img":"2511.png"},{"id":"singulardtv","img":"1409.png"},{"id":"edgeless","img":"1596.png"},{"id":"quantum-resistant-ledger","img":"1712.png"},{"id":"utrust","img":"2320.png"},{"id":"counterparty","img":"132.png"},{"id":"bitbay","img":"723.png"},{"id":"ins-ecosystem","img":"2369.png"},{"id":"metaverse","img":"1703.png"},{"id":"bread","img":"2306.png"},{"id":"gifto","img":"2289.png"},{"id":"nuls","img":"2092.png"},{"id":"gulden","img":"254.png"},{"id":"coindash","img":"1864.png"},{"id":"cobinhood","img":"2006.png"},{"id":"paccoin","img":"1107.png"},{"id":"viacoin","img":"470.png"},{"id":"naga","img":"2305.png"},{"id":"burst","img":"573.png"},{"id":"trinity-network-credit","img":"2443.png"},{"id":"bean-cash","img":"819.png"},{"id":"tierion","img":"1923.png"},{"id":"triggers","img":"1423.png"},{"id":"aeon","img":"1026.png"},{"id":"mobilego","img":"1715.png"},{"id":"wings","img":"1500.png"},{"id":"bottos","img":"2392.png"},{"id":"taas","img":"1592.png"},{"id":"medical-chain","img":"2497.png"},{"id":"cloakcoin","img":"362.png"},{"id":"delphy","img":"2162.png"},{"id":"hive-project","img":"1950.png"},{"id":"centra","img":"1867.png"},{"id":"library-credit","img":"1298.png"},{"id":"district0x","img":"1856.png"},{"id":"qlink","img":"2321.png"},{"id":"modum","img":"2080.png"},{"id":"eccoin","img":"212.png"},{"id":"ion","img":"1281.png"},{"id":"spankchain","img":"2219.png"},{"id":"origintrail","img":"2467.png"},{"id":"lunyr","img":"1658.png"},{"id":"indahash","img":"2459.png"},{"id":"attention-token-of-media","img":"2015.png"},{"id":"crown","img":"720.png"},{"id":"unikoin-gold","img":"2149.png"},{"id":"rise","img":"1294.png"},{"id":"colossuscoinxt","img":"2001.png"},{"id":"groestlcoin","img":"258.png"},{"id":"nimiq","img":"1811.png"},{"id":"all-sports","img":"2473.png"},{"id":"feathercoin","img":"8.png"},{"id":"cappasity","img":"2248.png"},{"id":"stk","img":"2493.png"},{"id":"coss","img":"1989.png"},{"id":"pepe-cash","img":"1405.png"},{"id":"salus","img":"1159.png"},{"id":"safe-exchange-coin","img":"1172.png"},{"id":"steem-dollars","img":"1312.png"},{"id":"mercury","img":"1590.png"},{"id":"internet-node-token","img":"2399.png"},{"id":"qbao","img":"2242.png"},{"id":"lykke","img":"1454.png"},{"id":"spectre-dividend","img":"2381.png"},{"id":"presearch","img":"2245.png"},{"id":"dimecoin","img":"90.png"},{"id":"tokencard","img":"1660.png"},{"id":"namecoin","img":"3.png"},{"id":"diamond","img":"77.png"},{"id":"adtoken","img":"1775.png"},{"id":"firstblood","img":"1403.png"},{"id":"bitcny","img":"624.png"},{"id":"decision-token","img":"2176.png"},{"id":"viberate","img":"2019.png"},{"id":"datum","img":"2283.png"},{"id":"decent","img":"1478.png"},{"id":"potcoin","img":"122.png"},{"id":"everex","img":"2034.png"},{"id":"deeponion","img":"1881.png"},{"id":"energo","img":"2215.png"},{"id":"sibcoin","img":"1082.png"},{"id":"humaniq","img":"1669.png"},{"id":"shift","img":"1050.png"},{"id":"monetha","img":"1947.png"},{"id":"electra","img":"1711.png"},{"id":"zeusshield","img":"2047.png"},{"id":"mintcoin","img":"141.png"},{"id":"blockmason","img":"2061.png"},{"id":"whitecoin","img":"268.png"},{"id":"odyssey","img":"2458.png"},{"id":"agrello-delta","img":"1949.png"},{"id":"cofound-it","img":"1729.png"},{"id":"swftcoin","img":"2341.png"},{"id":"selfkey","img":"2398.png"},{"id":"yoyow","img":"1899.png"},{"id":"posw-coin","img":"1495.png"},{"id":"hempcoin","img":"416.png"},{"id":"covesting","img":"2342.png"},{"id":"swarm-fund","img":"2506.png"},{"id":"zeepin","img":"2481.png"},{"id":"lamden","img":"2337.png"},{"id":"bitconnect","img":"1513.png"},{"id":"iocoin","img":"495.png"},{"id":"unobtanium","img":"67.png"},{"id":"bloomtoken","img":"2340.png"},{"id":"maecenas","img":"2064.png"},{"id":"mooncoin","img":"89.png"},{"id":"spectrecoin","img":"1505.png"},{"id":"hedge","img":"2079.png"},{"id":"voxels","img":"1208.png"},{"id":"qunqun","img":"2375.png"},{"id":"latoken","img":"2090.png"},{"id":"numeraire","img":"1732.png"},{"id":"game","img":"2336.png"},{"id":"blocktix","img":"1873.png"},{"id":"pascal-coin","img":"1473.png"},{"id":"leocoin","img":"1022.png"},{"id":"grid","img":"2134.png"},{"id":"dadi","img":"2535.png"},{"id":"soarcoin","img":"1595.png"},{"id":"trust","img":"1638.png"},{"id":"flash","img":"1755.png"},{"id":"aeron","img":"2153.png"},{"id":"trade-token","img":"2373.png"},{"id":"shield-xsh","img":"2144.png"},{"id":"suncontract","img":"1786.png"},{"id":"blockport","img":"2465.png"},{"id":"worldcore","img":"2288.png"},{"id":"moeda-loyalty-points","img":"1954.png"},{"id":"olympus-labs","img":"2327.png"},{"id":"aurora-dao","img":"2423.png"},{"id":"canyacoin","img":"2343.png"},{"id":"uquid-coin","img":"2273.png"},{"id":"blackcoin","img":"170.png"},{"id":"gridcoin","img":"833.png"},{"id":"carvertical","img":"2450.png"},{"id":"elastic","img":"1737.png"},{"id":"faircoin","img":"224.png"},{"id":"open-trading-network","img":"2069.png"},{"id":"mothership","img":"1847.png"},{"id":"hackspace-capital","img":"2397.png"},{"id":"bitclave","img":"2334.png"},{"id":"guppy","img":"1616.png"},{"id":"insurepal","img":"2421.png"},{"id":"bitdegree","img":"2374.png"},{"id":"nolimitcoin","img":"1382.png"},{"id":"myriad","img":"182.png"},{"id":"omni","img":"83.png"},{"id":"synereo","img":"1125.png"},{"id":"rivetz","img":"1991.png"},{"id":"propy","img":"1974.png"},{"id":"expanse","img":"1070.png"},{"id":"waves-community-token","img":"1527.png"},{"id":"snovio","img":"2258.png"},{"id":"bodhi","img":"2211.png"},{"id":"atbcoin","img":"1970.png"},{"id":"vericoin","img":"323.png"},{"id":"ormeus-coin","img":"1998.png"},{"id":"phore","img":"2158.png"},{"id":"radium","img":"1154.png"},{"id":"domraider","img":"2070.png"},{"id":"mybit-token","img":"1902.png"},{"id":"ixledger","img":"1845.png"},{"id":"solarcoin","img":"233.png"},{"id":"bismuth","img":"2009.png"},{"id":"golos","img":"1480.png"},{"id":"hydro-protocol","img":"2430.png"},{"id":"stox","img":"1861.png"},{"id":"rubycoin","img":"215.png"},{"id":"energycoin","img":"322.png"},{"id":"okcash","img":"760.png"},{"id":"monetaryunit","img":"706.png"},{"id":"oax","img":"1853.png"},{"id":"e-dinar-coin","img":"1358.png"},{"id":"blackmoon","img":"1976.png"},{"id":"paragon","img":"2094.png"},{"id":"prochain","img":"2275.png"},{"id":"universal-currency","img":"921.png"},{"id":"oraclechain","img":"1838.png"},{"id":"dai","img":"2308.png"},{"id":"quantum","img":"1709.png"},{"id":"primas","img":"1930.png"},{"id":"neumark","img":"2318.png"},{"id":"axpire","img":"2466.png"},{"id":"credo","img":"1963.png"},{"id":"kickico","img":"2017.png"},{"id":"encrypgen","img":"2208.png"},{"id":"get-protocol","img":"2354.png"},{"id":"bitsend","img":"366.png"},{"id":"newyorkcoin","img":"298.png"},{"id":"pareto-network","img":"2495.png"},{"id":"zoin","img":"1448.png"},{"id":"pandacoin-pnd","img":"161.png"},{"id":"boolberry","img":"406.png"},{"id":"clams","img":"460.png"},{"id":"gambit","img":"939.png"},{"id":"target-coin","img":"1995.png"},{"id":"lomocoin","img":"1380.png"},{"id":"decent-bet","img":"2175.png"},{"id":"bitusd","img":"623.png"},{"id":"fedoracoin","img":"87.png"},{"id":"karma","img":"2378.png"},{"id":"gobyte","img":"2200.png"},{"id":"auroracoin","img":"148.png"},{"id":"toacoin","img":"1833.png"},{"id":"cargox","img":"2490.png"},{"id":"alis","img":"2040.png"},{"id":"icos","img":"2082.png"},{"id":"ebtcnew","img":"2127.png"},{"id":"neutron","img":"894.png"},{"id":"databits","img":"1603.png"},{"id":"locicoin","img":"2518.png"},{"id":"chronobank","img":"1556.png"},{"id":"syndicate","img":"1304.png"},{"id":"airtoken","img":"2037.png"},{"id":"hubii-network","img":"2031.png"},{"id":"primecoin","img":"42.png"},{"id":"swarm-city","img":"1562.png"},{"id":"bitdice","img":"1990.png"},{"id":"prizm","img":"1681.png"},{"id":"oxycoin","img":"2170.png"},{"id":"e-coin","img":"1618.png"},{"id":"voisecom","img":"2012.png"},{"id":"foldingcoin","img":"606.png"},{"id":"neoscoin","img":"551.png"},{"id":"rialto","img":"1812.png"},{"id":"coinmeet","img":"2470.png"},{"id":"florincoin","img":"64.png"},{"id":"hacken","img":"2360.png"},{"id":"lockchain","img":"2287.png"},{"id":"dubaicoin-dbix","img":"1611.png"},{"id":"tao","img":"1391.png"},{"id":"exchange-union","img":"2091.png"},{"id":"circuits-of-value","img":"788.png"},{"id":"xaurum","img":"895.png"},{"id":"luxcoin","img":"2107.png"},{"id":"ethorse","img":"2413.png"},{"id":"polybius","img":"1784.png"},{"id":"ecobit","img":"1782.png"},{"id":"clearpoll","img":"2089.png"},{"id":"mysterium","img":"1721.png"},{"id":"hellogold","img":"2042.png"},{"id":"russian-mining-coin","img":"2125.png"},{"id":"oneroot-network","img":"2400.png"},{"id":"life","img":"2078.png"},{"id":"ethereum-blue","img":"2076.png"},{"id":"nexium","img":"1481.png"},{"id":"etheroll","img":"1677.png"},{"id":"global-currency-reserve","img":"1044.png"},{"id":"profile-utility-token","img":"2419.png"},{"id":"bounty0x","img":"2310.png"},{"id":"aventus","img":"1948.png"},{"id":"bitqy","img":"1917.png"},{"id":"sureremit","img":"2527.png"},{"id":"nubits","img":"626.png"},{"id":"patientory","img":"1708.png"},{"id":"incent","img":"1475.png"},{"id":"viuly","img":"2198.png"},{"id":"musicoin","img":"1577.png"},{"id":"sportyco","img":"2270.png"},{"id":"playkey","img":"2279.png"},{"id":"elixir","img":"1980.png"},{"id":"divi","img":"2229.png"},{"id":"investfeed","img":"1888.png"},{"id":"espers","img":"1238.png"},{"id":"aichain","img":"2407.png"},{"id":"zilla","img":"2500.png"},{"id":"payfair","img":"2244.png"},{"id":"b2bx","img":"2204.png"},{"id":"curecoin","img":"333.png"},{"id":"the-champcoin","img":"1894.png"},{"id":"obits","img":"1123.png"},{"id":"autonio","img":"2151.png"},{"id":"blockcat","img":"1882.png"},{"id":"dynamic","img":"1587.png"},{"id":"greencoin","img":"402.png"},{"id":"internet-of-people","img":"1464.png"},{"id":"pinkcoin","img":"313.png"},{"id":"everus","img":"2066.png"},{"id":"iungo","img":"2504.png"},{"id":"bitcoinz","img":"2041.png"},{"id":"bitcrystals","img":"1063.png"},{"id":"solaris","img":"1606.png"},{"id":"leverj","img":"2377.png"},{"id":"gatcoin","img":"2425.png"},{"id":"earthcoin","img":"85.png"},{"id":"linda","img":"1814.png"},{"id":"spectre-utility","img":"2382.png"},{"id":"artbyte","img":"374.png"},{"id":"sphere","img":"914.png"},{"id":"heat-ledger","img":"1308.png"},{"id":"stealthcoin","img":"448.png"},{"id":"change","img":"2060.png"},{"id":"sequence","img":"1399.png"},{"id":"alqo","img":"2199.png"},{"id":"eroscoin","img":"2249.png"},{"id":"flixxo","img":"2231.png"},{"id":"block-array","img":"2445.png"},{"id":"novacoin","img":"6.png"},{"id":"herocoin","img":"2323.png"},{"id":"sharechain","img":"2177.png"},{"id":"pirl","img":"2105.png"},{"id":"monacocoin","img":"1922.png"},{"id":"atmos","img":"1624.png"},{"id":"vcash","img":"836.png"},{"id":"internxt","img":"2022.png"},{"id":"aidcoin","img":"2462.png"},{"id":"aigang","img":"2367.png"},{"id":"dcorp","img":"2164.png"},{"id":"cvcoin","img":"1810.png"},{"id":"dovu","img":"2110.png"},{"id":"lampix","img":"1988.png"},{"id":"rebellious","img":"2368.png"},{"id":"bulwark","img":"2260.png"},{"id":"memetic","img":"1191.png"},{"id":"travelflex","img":"2491.png"},{"id":"kilocoin","img":"1182.png"},{"id":"flik","img":"2025.png"},{"id":"dopecoin","img":"145.png"},{"id":"belacoin","img":"217.png"},{"id":"adbank","img":"2501.png"},{"id":"nushares","img":"699.png"},{"id":"1337coin","img":"1109.png"},{"id":"hyperstake","img":"525.png"},{"id":"sumokoin","img":"1694.png"},{"id":"sprouts","img":"1002.png"},{"id":"bitcoin-plus","img":"293.png"},{"id":"dotcoin","img":"814.png"},{"id":"regalcoin","img":"2007.png"},{"id":"ties-network","img":"2166.png"},{"id":"chips","img":"1986.png"},{"id":"qwark","img":"1226.png"},{"id":"bonpay","img":"2256.png"},{"id":"hush","img":"1466.png"},{"id":"goldcoin","img":"25.png"},{"id":"lendconnect","img":"2365.png"},{"id":"europecoin","img":"964.png"},{"id":"verify","img":"2271.png"},{"id":"social","img":"1969.png"},{"id":"digipulse","img":"2207.png"},{"id":"apx","img":"1688.png"},{"id":"real","img":"2030.png"},{"id":"adshares","img":"1883.png"},{"id":"devery","img":"2464.png"},{"id":"publica","img":"2217.png"},{"id":"breakout-stake","img":"1303.png"},{"id":"uniform-fiscal-object","img":"168.png"},{"id":"vtorrent","img":"766.png"},{"id":"veriumreserve","img":"1387.png"},{"id":"innova","img":"2160.png"},{"id":"riecoin","img":"160.png"},{"id":"pesetacoin","img":"151.png"},{"id":"polis","img":"2359.png"},{"id":"vsync-vsx","img":"1951.png"},{"id":"trueflip","img":"1905.png"},{"id":"atlant","img":"2136.png"},{"id":"primalbase","img":"1841.png"},{"id":"zrcoin","img":"1726.png"},{"id":"bitcloud","img":"1381.png"},{"id":"hollywoodcoin","img":"2278.png"},{"id":"synergy","img":"951.png"},{"id":"transfercoin","img":"1032.png"},{"id":"denarius-dnr","img":"1769.png"},{"id":"2give","img":"1252.png"},{"id":"tracto","img":"2063.png"},{"id":"obsidian","img":"2005.png"},{"id":"jesus-coin","img":"2520.png"},{"id":"cryptopay","img":"2314.png"},{"id":"draftcoin","img":"1120.png"},{"id":"bitboost","img":"2195.png"},{"id":"bitmark","img":"543.png"},{"id":"korecoin","img":"400.png"},{"id":"karbo","img":"1340.png"},{"id":"exclusivecoin","img":"633.png"},{"id":"monkey-project","img":"2230.png"},{"id":"gcn-coin","img":"730.png"},{"id":"bitzeny","img":"990.png"},{"id":"starta","img":"1819.png"},{"id":"audiocoin","img":"948.png"},{"id":"cannabiscoin","img":"506.png"},{"id":"tokes","img":"1588.png"},{"id":"trezarcoin","img":"2002.png"},{"id":"buzzcoin","img":"1962.png"},{"id":"bitgem","img":"34.png"},{"id":"creditbit","img":"1153.png"},{"id":"upfiring","img":"2178.png"},{"id":"mcap","img":"1690.png"},{"id":"incakoin","img":"797.png"},{"id":"breakout","img":"1286.png"},{"id":"farad","img":"2159.png"},{"id":"goldmint","img":"2513.png"},{"id":"poly-ai","img":"2224.png"},{"id":"wild-crypto","img":"2029.png"},{"id":"masternodecoin","img":"1946.png"},{"id":"blockpool","img":"2167.png"},{"id":"altcoin-alt","img":"1642.png"},{"id":"zero","img":"1578.png"},{"id":"yocoin","img":"1156.png"},{"id":"micromoney","img":"2286.png"},{"id":"blitzcash","img":"729.png"},{"id":"project-decorum","img":"1277.png"},{"id":"sexcoin","img":"58.png"},{"id":"mywish","img":"2236.png"},{"id":"hawala-today","img":"2179.png"},{"id":"terracoin","img":"4.png"},{"id":"huntercoin","img":"130.png"},{"id":"ignition","img":"2395.png"},{"id":"bitdeal","img":"1793.png"},{"id":"xgox","img":"2065.png"},{"id":"speed-mining-service","img":"2486.png"},{"id":"coinlancer","img":"2352.png"},{"id":"anoncoin","img":"43.png"},{"id":"condensate","img":"1662.png"},{"id":"flypme","img":"2126.png"},{"id":"magnet","img":"2218.png"},{"id":"evergreencoin","img":"1148.png"},{"id":"social-send","img":"2255.png"},{"id":"spreadcoin","img":"702.png"},{"id":"privatix","img":"2184.png"},{"id":"zeitcoin","img":"181.png"},{"id":"creativecoin","img":"1676.png"},{"id":"nvo","img":"1794.png"},{"id":"ethereum-movie-venture","img":"1625.png"},{"id":"unity-ingot","img":"1667.png"},{"id":"startcoin","img":"389.png"},{"id":"putincoin","img":"1299.png"},{"id":"opus","img":"1931.png"},{"id":"indorse-token","img":"1967.png"},{"id":"force","img":"2142.png"},{"id":"bitswift","img":"659.png"},{"id":"eventchain","img":"2237.png"},{"id":"mazacoin","img":"164.png"},{"id":"chaincoin","img":"999.png"},{"id":"pylon-network","img":"2330.png"},{"id":"hexx","img":"977.png"},{"id":"trustplus","img":"450.png"},{"id":"vslice","img":"1483.png"},{"id":"campuscoin","img":"1842.png"},{"id":"interstellar-holdings","img":"2173.png"},{"id":"dnotes","img":"184.png"},{"id":"ixcoin","img":"13.png"},{"id":"ethbits","img":"1699.png"},{"id":"qvolta","img":"2124.png"},{"id":"global-jobcoin","img":"2401.png"},{"id":"procurrency","img":"1650.png"},{"id":"eboostcoin","img":"1704.png"},{"id":"ergo","img":"1762.png"},{"id":"ongsocial","img":"2240.png"},{"id":"rupee","img":"1799.png"},{"id":"smartlands","img":"2471.png"},{"id":"magi","img":"629.png"},{"id":"student-coin","img":"2180.png"},{"id":"e-gulden","img":"234.png"},{"id":"pure","img":"2146.png"},{"id":"quark","img":"53.png"},{"id":"parkbyte","img":"934.png"},{"id":"cryptoping","img":"1777.png"},{"id":"teslacoin","img":"114.png"},{"id":"giga-watt-token","img":"1940.png"},{"id":"zephyr","img":"2163.png"},{"id":"crowdcoin","img":"2268.png"},{"id":"adzcoin","img":"1136.png"},{"id":"pluscoin","img":"2186.png"},{"id":"thegcccoin","img":"1531.png"},{"id":"intensecoin","img":"2185.png"},{"id":"equitrader","img":"1686.png"},{"id":"vivo","img":"1956.png"},{"id":"litedoge","img":"853.png"},{"id":"darcrus","img":"1503.png"},{"id":"cryptogenic-bullion","img":"49.png"},{"id":"magiccoin","img":"2250.png"},{"id":"ellaism","img":"2122.png"},{"id":"dinastycoin","img":"1745.png"},{"id":"inflationcoin","img":"1504.png"},{"id":"eltcoin","img":"2147.png"},{"id":"fundyourselfnow","img":"1857.png"},{"id":"oceanlab","img":"1959.png"},{"id":"smileycoin","img":"799.png"},{"id":"digitalprice","img":"654.png"},{"id":"chronologic","img":"1985.png"},{"id":"neverdie","img":"1872.png"},{"id":"straks","img":"2332.png"},{"id":"canada-ecoin","img":"304.png"},{"id":"unify","img":"1736.png"},{"id":"machinecoin","img":"812.png"},{"id":"ganjacoin","img":"692.png"},{"id":"arcticcoin","img":"1434.png"},{"id":"skeincoin","img":"199.png"},{"id":"photon","img":"175.png"},{"id":"cream","img":"1850.png"},{"id":"petrodollar","img":"260.png"},{"id":"leafcoin","img":"107.png"},{"id":"noblecoin","img":"117.png"},{"id":"42-coin","img":"93.png"},{"id":"fastcoin","img":"32.png"},{"id":"accelerator-network","img":"2225.png"},{"id":"moin","img":"1141.png"},{"id":"copico","img":"2206.png"},{"id":"leviarcoin","img":"1746.png"},{"id":"fujicoin","img":"960.png"},{"id":"miners-reward-token","img":"1739.png"},{"id":"footy-cash","img":"1234.png"},{"id":"skincoin","img":"1830.png"},{"id":"growers-international","img":"1900.png"},{"id":"linx","img":"1724.png"},{"id":"maxcoin","img":"128.png"},{"id":"fluttercoin","img":"218.png"},{"id":"fucktoken","img":"1813.png"},{"id":"commodity-ad-network","img":"2372.png"},{"id":"centurion","img":"1546.png"},{"id":"bitcoin-scrypt","img":"205.png"},{"id":"unitus","img":"781.png"},{"id":"kekcoin","img":"1852.png"},{"id":"ethereumcash","img":"2048.png"},{"id":"popularcoin","img":"275.png"},{"id":"bytecent","img":"734.png"},{"id":"renos","img":"1559.png"},{"id":"bata","img":"945.png"},{"id":"universe","img":"1605.png"},{"id":"firstcoin","img":"1522.png"},{"id":"unbreakablecoin","img":"334.png"},{"id":"blakestar","img":"1851.png"},{"id":"worldcoin","img":"16.png"},{"id":"zennies","img":"1629.png"},{"id":"insanecoin-insn","img":"1678.png"},{"id":"legends-room","img":"1722.png"},{"id":"op-coin","img":"2355.png"},{"id":"cryptonite","img":"501.png"},{"id":"jetcoin","img":"1787.png"},{"id":"fantomcoin","img":"370.png"},{"id":"erc20","img":"2165.png"},{"id":"zetacoin","img":"56.png"},{"id":"arbitragect","img":"2415.png"},{"id":"emphy","img":"2172.png"},{"id":"bitpark-coin","img":"1494.png"},{"id":"wandx","img":"2269.png"},{"id":"kubera-coin","img":"2263.png"},{"id":"suretly","img":"1933.png"},{"id":"abjcoin","img":"2171.png"},{"id":"aricoin","img":"142.png"},{"id":"piggycoin","img":"386.png"},{"id":"biblepay","img":"1916.png"},{"id":"authorship","img":"2051.png"},{"id":"scorecoin","img":"1610.png"},{"id":"macron","img":"1644.png"},{"id":"hodlcoin","img":"1195.png"},{"id":"link-platform","img":"1820.png"},{"id":"roulettetoken","img":"1683.png"},{"id":"digitalcoin","img":"18.png"},{"id":"bitradio","img":"1754.png"},{"id":"britcoin","img":"426.png"},{"id":"cryptocarbon","img":"1510.png"},{"id":"ace","img":"2311.png"},{"id":"iticoin","img":"1671.png"},{"id":"kolion","img":"1999.png"},{"id":"homeblockcoin","img":"2317.png"},{"id":"megacoin","img":"37.png"},{"id":"bitbar","img":"14.png"},{"id":"equal","img":"2479.png"},{"id":"elcoin-el","img":"1249.png"},{"id":"smartcoin","img":"113.png"},{"id":"tittiecoin","img":"719.png"},{"id":"titcoin","img":"513.png"},{"id":"happycoin","img":"1628.png"},{"id":"visio","img":"1566.png"},{"id":"cryptojacks","img":"1306.png"},{"id":"elementrem","img":"1334.png"},{"id":"piplcoin","img":"2056.png"},{"id":"soma","img":"2272.png"},{"id":"rupaya","img":"1877.png"},{"id":"qubitcoin","img":"129.png"},{"id":"lanacoin","img":"1257.png"},{"id":"trumpcoin","img":"1185.png"},{"id":"deutsche-emark","img":"72.png"},{"id":"argentum","img":"31.png"},{"id":"digicube","img":"1100.png"},{"id":"ethereum-gold","img":"2074.png"},{"id":"netko","img":"1582.png"},{"id":"royal-kingdom-coin","img":"2053.png"},{"id":"platinumbar","img":"1254.png"},{"id":"capricoin","img":"1008.png"},{"id":"ebitcoin-cash","img":"2187.png"},{"id":"monster-byte","img":"1887.png"},{"id":"dfscoin","img":"1978.png"},{"id":"purevidz","img":"1511.png"},{"id":"cryptoforecast","img":"1713.png"},{"id":"bitcoin-red","img":"2093.png"},{"id":"sovereign-hero","img":"1805.png"},{"id":"nyancoin","img":"120.png"},{"id":"kobocoin","img":"815.png"},{"id":"cartaxi-token","img":"2152.png"},{"id":"eternity","img":"1474.png"},{"id":"rimbit","img":"703.png"},{"id":"billionaire-token","img":"1981.png"},{"id":"garlicoin","img":"2475.png"},{"id":"grimcoin","img":"2168.png"},{"id":"blazecoin","img":"415.png"},{"id":"halcyon","img":"545.png"},{"id":"droxne","img":"1964.png"},{"id":"securecoin","img":"57.png"},{"id":"minereum","img":"1673.png"},{"id":"blakecoin","img":"125.png"},{"id":"pakcoin","img":"1066.png"},{"id":"confido","img":"2155.png"},{"id":"iethereum","img":"2104.png"},{"id":"swagbucks","img":"1142.png"},{"id":"paycoin2","img":"764.png"},{"id":"hicoin","img":"1244.png"},{"id":"mojocoin","img":"1212.png"},{"id":"digital-developers-fund","img":"1884.png"},{"id":"pioneer-coin","img":"2265.png"},{"id":"wavesgo","img":"1643.png"},{"id":"steneum-coin","img":"2362.png"},{"id":"tokyo","img":"2404.png"},{"id":"goldblocks","img":"1285.png"},{"id":"kurrent","img":"1468.png"},{"id":"adcoin","img":"1915.png"},{"id":"8bit","img":"890.png"},{"id":"kayicoin","img":"1766.png"},{"id":"newbium","img":"1275.png"},{"id":"gapcoin","img":"708.png"},{"id":"whalecoin","img":"2024.png"},{"id":"daxxcoin","img":"1797.png"},{"id":"globaltoken","img":"1731.png"},{"id":"truckcoin","img":"468.png"},{"id":"prototanium","img":"1093.png"},{"id":"coinonatx","img":"1889.png"},{"id":"blockpay","img":"1374.png"},{"id":"trackr","img":"1987.png"},{"id":"octanox","img":"1733.png"},{"id":"litebar","img":"174.png"},{"id":"tekcoin","img":"325.png"},{"id":"bitbtc","img":"625.png"},{"id":"postoken","img":"2038.png"},{"id":"roofs","img":"2117.png"},{"id":"bitsilver","img":"813.png"},{"id":"bitcoin-planet","img":"1748.png"},{"id":"crystal-clear","img":"2032.png"},{"id":"senderon","img":"2039.png"},{"id":"bolivarcoin","img":"1053.png"},{"id":"aquariuscoin","img":"1247.png"},{"id":"sugar-exchange","img":"2196.png"},{"id":"pascal-lite","img":"1575.png"},{"id":"desire","img":"2148.png"},{"id":"influxcoin","img":"1069.png"},{"id":"atomic-coin","img":"1420.png"},{"id":"litecoin-plus","img":"331.png"},{"id":"chancoin","img":"1760.png"},{"id":"zozocoin","img":"2214.png"},{"id":"octocoin","img":"221.png"},{"id":"postcoin","img":"1218.png"},{"id":"briacoin","img":"1763.png"},{"id":"nevacoin","img":"1200.png"},{"id":"fujinto","img":"1938.png"},{"id":"dashcoin","img":"660.png"},{"id":"808coin","img":"1322.png"},{"id":"leacoin","img":"892.png"},{"id":"ethereum-dark","img":"1973.png"},{"id":"redcoin","img":"103.png"},{"id":"prime-xi","img":"656.png"},{"id":"onix","img":"1747.png"},{"id":"dibcoin","img":"1612.png"},{"id":"c-bit","img":"1193.png"},{"id":"parallelcoin","img":"1089.png"},{"id":"eurocoin","img":"1038.png"},{"id":"honey","img":"1581.png"},{"id":"gameunits","img":"1502.png"},{"id":"darsek","img":"1614.png"},{"id":"qbic","img":"2460.png"},{"id":"tagcoin","img":"61.png"},{"id":"berncash","img":"1223.png"},{"id":"sagacoin","img":"2261.png"},{"id":"votecoin","img":"2221.png"},{"id":"helleniccoin","img":"1004.png"},{"id":"zcash-gold","img":"2169.png"},{"id":"sativacoin","img":"680.png"},{"id":"virtacoinplus","img":"1569.png"},{"id":"trident","img":"2284.png"},{"id":"mao-zedong","img":"1869.png"},{"id":"globalboost-y","img":"644.png"},{"id":"catcoin","img":"84.png"},{"id":"litebitcoin","img":"1825.png"},{"id":"glasscoin","img":"2232.png"},{"id":"advanced-internet-blocks","img":"911.png"},{"id":"dix-asset","img":"1501.png"},{"id":"yenten","img":"2290.png"},{"id":"tajcoin","img":"1353.png"},{"id":"dalecoin","img":"1912.png"},{"id":"reecoin","img":"1307.png"},{"id":"ronpaulcoin","img":"88.png"},{"id":"beatcoin","img":"1397.png"},{"id":"acoin","img":"601.png"},{"id":"eot-token","img":"1928.png"},{"id":"nekonium","img":"2257.png"},{"id":"fincoin","img":"1800.png"},{"id":"ecocoin","img":"1685.png"},{"id":"slevin","img":"1781.png"},{"id":"evotion","img":"1130.png"},{"id":"madcoin","img":"2326.png"},{"id":"paycon","img":"818.png"},{"id":"digital-rupees","img":"1520.png"},{"id":"idice","img":"1735.png"},{"id":"global-tour-coin","img":"1801.png"},{"id":"fuzzballs","img":"1241.png"},{"id":"eaglecoin","img":"2182.png"},{"id":"asiadigicoin","img":"1176.png"},{"id":"eryllium","img":"1535.png"},{"id":"bipcoin","img":"1442.png"},{"id":"compucoin","img":"998.png"},{"id":"x-coin","img":"837.png"},{"id":"debitcoin","img":"1288.png"},{"id":"boostcoin","img":"350.png"},{"id":"300-token","img":"1840.png"},{"id":"luna-coin","img":"1496.png"},{"id":"bolenum","img":"1897.png"},{"id":"altcommunity-coin","img":"2140.png"},{"id":"allion","img":"1554.png"},{"id":"bnrtxcoin","img":"1773.png"},{"id":"iconic","img":"1528.png"},{"id":"gold-pressed-latinum","img":"1665.png"},{"id":"songcoin","img":"857.png"},{"id":"kronecoin","img":"1943.png"},{"id":"master-swiscoin","img":"1550.png"},{"id":"printerium","img":"1519.png"},{"id":"solarflarecoin","img":"1525.png"},{"id":"plncoin","img":"263.png"},{"id":"exchangen","img":"2055.png"},{"id":"litecoin-ultra","img":"1935.png"},{"id":"vaperscoin","img":"1341.png"},{"id":"milocoin","img":"1576.png"},{"id":"doubloon","img":"1534.png"},{"id":"women","img":"1790.png"},{"id":"bitvolt","img":"1657.png"},{"id":"gbcgoldcoin","img":"1128.png"},{"id":"rsgpcoin","img":"1822.png"},{"id":"rawcoin2","img":"1472.png"},{"id":"agrolifecoin","img":"1366.png"},{"id":"veros","img":"1465.png"},{"id":"cryptoworldx-token","img":"1544.png"},{"id":"high-voltage","img":"1282.png"},{"id":"argus","img":"1558.png"},{"id":"coupecoin","img":"1738.png"},{"id":"crevacoin","img":"986.png"},{"id":"vault-coin","img":"1486.png"},{"id":"coimatic-2","img":"1837.png"},{"id":"aerium","img":"2193.png"},{"id":"levoplus","img":"1568.png"},{"id":"exrnchain","img":"2088.png"},{"id":"tristar-coin","img":"1608.png"},{"id":"harmonycoin-hmc","img":"1832.png"},{"id":"prcoin","img":"1555.png"},{"id":"digital-money-bits","img":"1687.png"},{"id":"peerplays-ppy","img":"1719.png"},{"id":"starbase","img":"2295.png"},{"id":"pluton","img":"1392.png"},{"id":"prospectors-gold","img":"2023.png"},{"id":"russiacoin","img":"1147.png"},{"id":"asiacoin","img":"269.png"},{"id":"virtacoin","img":"520.png"},{"id":"xenon","img":"2106.png"},{"id":"dao-casino","img":"1771.png"},{"id":"real-estate-tokens","img":"1961.png"},{"id":"encryptotel","img":"1714.png"},{"id":"bunnycoin","img":"594.png"},{"id":"martexcoin","img":"1266.png"},{"id":"goodomy","img":"1752.png"},{"id":"bluecoin","img":"290.png"},{"id":"luckchain","img":"1463.png"},{"id":"yashcoin","img":"1499.png"},{"id":"embers","img":"1815.png"},{"id":"bowhead","img":"1965.png"},{"id":"version","img":"1702.png"},{"id":"etheriya","img":"1890.png"},{"id":"ico-openledger","img":"1276.png"},{"id":"shorty","img":"1482.png"},{"id":"fimkrypto","img":"444.png"},{"id":"aurumcoin","img":"666.png"},{"id":"shadowcash","img":"493.png"},{"id":"inpay","img":"1626.png"},{"id":"carboncoin","img":"502.png"},{"id":"orbitcoin","img":"80.png"},{"id":"intelligent-trading-tech","img":"2103.png"},{"id":"netcoin","img":"75.png"},{"id":"starcredits","img":"1942.png"},{"id":"ethbet","img":"2026.png"},{"id":"i0coin","img":"63.png"},{"id":"woodcoin","img":"859.png"},{"id":"guncoin","img":"312.png"},{"id":"metalcoin","img":"796.png"},{"id":"hitcoin","img":"1220.png"},{"id":"bitstar","img":"276.png"},{"id":"rustbits","img":"1870.png"},{"id":"trollcoin","img":"638.png"},{"id":"ultimate-secure-cash","img":"1617.png"},{"id":"gaia","img":"671.png"},{"id":"hobonickels","img":"78.png"},{"id":"bigup","img":"1198.png"},{"id":"unicoin","img":"959.png"},{"id":"ultracoin","img":"121.png"},{"id":"fuelcoin","img":"381.png"},{"id":"triangles","img":"477.png"},{"id":"opal","img":"597.png"},{"id":"bit20","img":"1818.png"},{"id":"flycoin","img":"1062.png"},{"id":"btctalkcoin","img":"295.png"},{"id":"bittokens","img":"1359.png"},{"id":"bitz","img":"842.png"},{"id":"tattoocoin","img":"1524.png"},{"id":"amsterdamcoin","img":"1035.png"},{"id":"joulecoin","img":"68.png"},{"id":"phoenixcoin","img":"35.png"},{"id":"signatum","img":"1836.png"},{"id":"chronos","img":"1315.png"},{"id":"valorbit","img":"1215.png"},{"id":"manna","img":"1019.png"},{"id":"tigercoin","img":"79.png"},{"id":"mincoin","img":"9.png"},{"id":"bitcurrency","img":"1457.png"},{"id":"supercoin","img":"341.png"},{"id":"sterlingcoin","img":"627.png"},{"id":"swing","img":"1085.png"},{"id":"ammo-rewards","img":"1716.png"},{"id":"motocoin","img":"360.png"},{"id":"goldreserve","img":"412.png"},{"id":"kushcoin","img":"1529.png"},{"id":"colossuscoin-v2","img":"854.png"},{"id":"revolvercoin","img":"1284.png"},{"id":"evil-coin","img":"1165.png"},{"id":"coin2-1","img":"367.png"},{"id":"coin","img":"206.png"},{"id":"funcoin","img":"1670.png"},{"id":"chesscoin","img":"1297.png"},{"id":"marscoin","img":"154.png"},{"id":"cashcoin","img":"159.png"},{"id":"philosopher-stones","img":"76.png"},{"id":"globalcoin","img":"51.png"},{"id":"ratecoin","img":"978.png"},{"id":"quazarcoin","img":"338.png"},{"id":"bankcoin","img":"1597.png"},{"id":"joincoin","img":"536.png"},{"id":"icoin","img":"138.png"},{"id":"bitcoinfast","img":"747.png"},{"id":"freicoin","img":"10.png"},{"id":"ccore","img":"2241.png"},{"id":"jin-coin","img":"1390.png"},{"id":"wayguide","img":"1362.png"},{"id":"ambercoin","img":"804.png"},{"id":"sixeleven","img":"1251.png"},{"id":"virtualcoin","img":"519.png"},{"id":"mineum","img":"1283.png"},{"id":"emerald","img":"50.png"},{"id":"cannacoin","img":"279.png"},{"id":"sooncoin","img":"795.png"},{"id":"rubies","img":"1175.png"},{"id":"xios","img":"2097.png"},{"id":"crypto","img":"933.png"},{"id":"px","img":"1357.png"},{"id":"cypher","img":"882.png"},{"id":"starcash-network","img":"2157.png"},{"id":"bitgold","img":"778.png"},{"id":"independent-money-system","img":"1194.png"},{"id":"shadow-token","img":"1878.png"},{"id":"bumbacoin","img":"1206.png"},{"id":"sproutsextreme","img":"1184.png"},{"id":"mustangcoin","img":"1396.png"},{"id":"bitcoal","img":"1824.png"},{"id":"datacoin","img":"69.png"},{"id":"secretcoin","img":"1113.png"},{"id":"icobid","img":"1514.png"},{"id":"quatloo","img":"461.png"},{"id":"dollarcoin","img":"1395.png"},{"id":"allsafe","img":"1439.png"},{"id":"sacoin","img":"1417.png"},{"id":"impact","img":"1607.png"},{"id":"zurcoin","img":"1250.png"},{"id":"brat","img":"1926.png"},{"id":"islacoin","img":"1084.png"},{"id":"satoshimadness","img":"1048.png"},{"id":"remicoin","img":"1770.png"},{"id":"veltor","img":"1368.png"},{"id":"flaxscript","img":"1010.png"},{"id":"creatio","img":"1469.png"},{"id":"cannation","img":"1674.png"},{"id":"goldpieces","img":"785.png"},{"id":"cthulhu-offerings","img":"1011.png"},{"id":"yacoin","img":"17.png"},{"id":"neuro","img":"1717.png"},{"id":"spacecoin","img":"1058.png"},{"id":"virta-unique-coin","img":"1792.png"},{"id":"soilcoin","img":"1111.png"},{"id":"comet","img":"1291.png"},{"id":"gpu-coin","img":"1268.png"},{"id":"cachecoin","img":"134.png"},{"id":"marijuanacoin","img":"1548.png"},{"id":"enigma","img":"1228.png"},{"id":"guccionecoin","img":"1033.png"},{"id":"bitcedi","img":"1273.png"},{"id":"bitcoin-21","img":"1248.png"},{"id":"biteur","img":"954.png"},{"id":"money","img":"1110.png"},{"id":"quebecoin","img":"278.png"},{"id":"ripto-bux","img":"1613.png"},{"id":"franko","img":"19.png"},{"id":"bitquark","img":"356.png"},{"id":"speedcash","img":"1651.png"},{"id":"javascript-token","img":"2100.png"},{"id":"bitasean","img":"1885.png"},{"id":"bitcoin-private","img":"2575.png"},{"id":"wanchain","img":"2606.png"},{"id":"bitcoin-diamond","img":"2222.png"},{"id":"ontology","img":"2566.png"},{"id":"mithril","img":"2608.png"},{"id":"centrality","img":"2585.png"},{"id":"pundi-x","img":"2603.png"},{"id":"mixin","img":"2349.png"},{"id":"elastos","img":"2492.png"},{"id":"gxchain","img":"1750.png"},{"id":"nucleus-vision","img":"2544.png"},{"id":"fusion","img":"2530.png"},{"id":"loom-network","img":"2588.png"},{"id":"matrix-ai-network","img":"2474.png"},{"id":"tokenpay","img":"2627.png"},{"id":"poa-network","img":"2548.png"},{"id":"arcblock","img":"2545.png"},{"id":"boscoin","img":"2095.png"},{"id":"paypex","img":"2191.png"},{"id":"cube","img":"2559.png"},{"id":"genaro-network","img":"2291.png"},{"id":"cortex","img":"2638.png"},{"id":"smartmesh","img":"2277.png"},{"id":"litecoin-cash","img":"2540.png"},{"id":"ruff","img":"2476.png"},{"id":"thekey","img":"2507.png"},{"id":"scryinfo","img":"2428.png"},{"id":"dropil","img":"2591.png"},{"id":"credits","img":"2556.png"},{"id":"crypterium","img":"2447.png"},{"id":"ost","img":"2296.png"},{"id":"iht-real-estate-protocol","img":"2552.png"},{"id":"envion","img":"2526.png"},{"id":"tomochain","img":"2570.png"},{"id":"blox","img":"1864.png"},{"id":"rock","img":"2550.png"},{"id":"refereum","img":"2553.png"},{"id":"mobius","img":"2429.png"},{"id":"universa","img":"2524.png"},{"id":"casinocoin","img":"45.png"},{"id":"republic-protocol","img":"2539.png"},{"id":"linkeye","img":"2468.png"},{"id":"legolas-exchange","img":"2600.png"},{"id":"uptoken","img":"2597.png"},{"id":"electrifyasia","img":"2573.png"},{"id":"shipchain","img":"2579.png"},{"id":"cpchain","img":"2482.png"},{"id":"ugchain","img":"2389.png"},{"id":"dmarket","img":"2503.png"},{"id":"fortuna","img":"2472.png"},{"id":"ravencoin","img":"2577.png"},{"id":"xinfin-network","img":"2634.png"},{"id":"educare","img":"2453.png"},{"id":"babb","img":"2572.png"},{"id":"bankex","img":"2390.png"},{"id":"nanjcoin","img":"2595.png"},{"id":"havven","img":"2586.png"},{"id":"sentinel-chain","img":"2624.png"},{"id":"lympo","img":"2554.png"},{"id":"alphacat","img":"2525.png"},{"id":"switcheo","img":"2620.png"},{"id":"banca","img":"2592.png"},{"id":"spacechain","img":"2410.png"},{"id":"yee","img":"2437.png"},{"id":"stakenet","img":"2633.png"},{"id":"colossusxt","img":"2001.png"},{"id":"aidoc","img":"2357.png"},{"id":"datawallet","img":"2510.png"},{"id":"measurable-data-token","img":"2348.png"},{"id":"revolutionvr","img":"1208.png"},{"id":"restart-energy-mwat","img":"2533.png"},{"id":"hi-mutual-society","img":"2484.png"},{"id":"matryx","img":"2325.png"},{"id":"tokenclub","img":"2364.png"},{"id":"swissborg","img":"2499.png"},{"id":"bee-token","img":"2557.png"},{"id":"bitcoin-atom","img":"2387.png"},{"id":"te-food","img":"2578.png"},{"id":"echolink","img":"2391.png"},{"id":"debitum-network","img":"2584.png"},{"id":"banyan-network","img":"2598.png"},{"id":"polyswarm","img":"2630.png"},{"id":"storiqa","img":"2541.png"},{"id":"true-chain","img":"2457.png"},{"id":"zap","img":"2363.png"},{"id":"bitcoin-green","img":"2604.png"},{"id":"cashaa","img":"2529.png"},{"id":"rentberry","img":"2628.png"},{"id":"coinfi","img":"2478.png"},{"id":"coinpoker","img":"2569.png"},{"id":"mediccoin","img":"916.png"},{"id":"leadcoin","img":"2580.png"},{"id":"remme","img":"2546.png"},{"id":"fidentiax","img":"2333.png"},{"id":"clearcoin","img":"2622.png"},{"id":"guaranteed-ethurance-token-extra","img":"2589.png"},{"id":"interplanetary-broadcast-coin","img":"2561.png"},{"id":"geocoin","img":"823.png"},{"id":"insights-network","img":"2558.png"},{"id":"true-usd","img":"2563.png"},{"id":"atn","img":"2380.png"},{"id":"dimcoin","img":"2312.png"},{"id":"ink-protocol","img":"2549.png"},{"id":"ip-exchange","img":"2617.png"},{"id":"gladius-token","img":"2534.png"},{"id":"rebl","img":"2368.png"},{"id":"hoqu","img":"2564.png"},{"id":"dether","img":"2528.png"},{"id":"idex-membership","img":"2422.png"},{"id":"b3coin","img":"1371.png"},{"id":"tiesdb","img":"2166.png"},{"id":"astro","img":"2190.png"},{"id":"jet8","img":"2568.png"},{"id":"lala-world","img":"2582.png"},{"id":"sharex","img":"2426.png"},{"id":"education-ecosystem","img":"2562.png"},{"id":"1world","img":"2601.png"},{"id":"deviantcoin","img":"2649.png"},{"id":"experty","img":"2547.png"},{"id":"sether","img":"2555.png"},{"id":"eztoken","img":"2560.png"},{"id":"vezt","img":"2384.png"},{"id":"nework","img":"2477.png"},{"id":"reftoken","img":"2436.png"},{"id":"biocoin","img":"2521.png"},{"id":"hat-exchange","img":"2179.png"},{"id":"copytrack","img":"2543.png"},{"id":"maverick-chain","img":"2418.png"},{"id":"sharpe-platform-token","img":"2581.png"},{"id":"jiyo","img":"2253.png"},{"id":"graft","img":"2571.png"},{"id":"bezop","img":"2551.png"},{"id":"startercoin","img":"2565.png"},{"id":"sociall","img":"1969.png"},{"id":"mercury-protocol","img":"2098.png"},{"id":"stipend","img":"2616.png"},{"id":"crave","img":"869.png"},{"id":"tokenbox","img":"2452.png"},{"id":"triaconta","img":"2226.png"},{"id":"sense","img":"2402.png"},{"id":"kzcash","img":"2386.png"},{"id":"global-cryptocurrency","img":"1531.png"},{"id":"blocklancer","img":"2615.png"},{"id":"hirematch","img":"2590.png"},{"id":"latiumx","img":"2594.png"},{"id":"blitzpredict","img":"2614.png"},{"id":"numus","img":"2351.png"},{"id":"bitwhite","img":"2489.png"},{"id":"tidex-token","img":"2542.png"},{"id":"deuscoin","img":"1640.png"},{"id":"drp-utility","img":"2508.png"},{"id":"peepcoin","img":"1803.png"},{"id":"ethersportz","img":"2509.png"},{"id":"intelligent-trading-foundation","img":"2103.png"},{"id":"shekel","img":"2514.png"},{"id":"octoin-coin","img":"2583.png"},{"id":"tigereum","img":"2523.png"},{"id":"guess","img":"2461.png"},{"id":"bitair","img":"2285.png"},{"id":"bitsum","img":"2648.png"},{"id":"irishcoin","img":"988.png"},{"id":"golfcoin","img":"1375.png"},{"id":"tokugawa","img":"2264.png"},{"id":"galactrum","img":"2411.png"},{"id":"ammo-reloaded","img":"1716.png"},{"id":"cabbage","img":"1210.png"},{"id":"stronghands","img":"1106.png"},{"id":"phantomx","img":"2205.png"},{"id":"interzone","img":"1994.png"},{"id":"coinonat","img":"1630.png"},{"id":"ride-my-car","img":"1547.png"},{"id":"useless-ethereum-token","img":"1778.png"},{"id":"zetamicron","img":"1456.png"},{"id":"geertcoin","img":"1570.png"},{"id":"dollar-online","img":"1485.png"},{"id":"anarchistsprime","img":"994.png"},{"id":"project-x","img":"1691.png"},{"id":"caliphcoin","img":"1411.png"},{"id":"bitshares-music","img":"920.png"},{"id":"imbrex","img":"1961.png"},{"id":"bullion","img":"49.png"},{"id":"the-cypherfunks","img":"965.png"},{"id":"nexxus","img":"1875.png"},{"id":"polcoin","img":"257.png"},{"id":"cryptoescudo","img":"249.png"},{"id":"theresa-may-coin","img":"1693.png"},{"id":"firecoin","img":"476.png"},{"id":"elacoin","img":"20.png"},{"id":"network-token","img":"2109.png"},{"id":"hempcoin-hmp","img":"1173.png"},{"id":"blackstar","img":"1491.png"},{"id":"metal-music-coin","img":"983.png"},{"id":"benjirolls","img":"1509.png"},{"id":"billarycoin","img":"1263.png"},{"id":"californium","img":"898.png"},{"id":"shilling","img":"1394.png"},{"id":"healthywormcoin","img":"1602.png"},{"id":"bowscoin","img":"993.png"},{"id":"uro","img":"380.png"},{"id":"pulse","img":"1192.png"},{"id":"warp","img":"1166.png"},{"id":"zayedcoin","img":"1389.png"},{"id":"ponzicoin","img":"1259.png"},{"id":"credence-coin","img":"2150.png"},{"id":"vip-tokens","img":"1187.png"},{"id":"artex-coin","img":"1361.png"},{"id":"jewels","img":"1379.png"},{"id":"sojourn","img":"1891.png"},{"id":"kingn-coin","img":"1743.png"},{"id":"arbit","img":"938.png"},{"id":"bios-crypto","img":"1018.png"},{"id":"mindcoin","img":"1139.png"},{"id":"dreamcoin","img":"316.png"},{"id":"piecoin","img":"1563.png"},{"id":"litecred","img":"1155.png"},{"id":"vector","img":"1052.png"},{"id":"letitride","img":"1309.png"},{"id":"tagrcoin","img":"997.png"},{"id":"zonecoin","img":"1347.png"},{"id":"dappster","img":"1310.png"},{"id":"steps","img":"1073.png"},{"id":"destiny","img":"1180.png"},{"id":"playercoin","img":"2115.png"},{"id":"impulsecoin","img":"1438.png"},{"id":"wild-beast-block","img":"831.png"},{"id":"jobscoin","img":"1421.png"},{"id":"sydpak","img":"1040.png"},{"id":"osmiumcoin","img":"1096.png"},{"id":"posex","img":"1209.png"},{"id":"torcoin-tor","img":"1621.png"},{"id":"save-and-gain","img":"1090.png"},{"id":"biobar","img":"1579.png"},{"id":"coimatic-3","img":"2045.png"},{"id":"ibank","img":"1515.png"},{"id":"nodecoin","img":"1479.png"},{"id":"concoin","img":"1632.png"},{"id":"geysercoin","img":"1846.png"},{"id":"elysium","img":"1539.png"},{"id":"socialcoin-socc","img":"1774.png"},{"id":"selfiecoin","img":"865.png"},{"id":"p7coin","img":"884.png"},{"id":"magnum","img":"1523.png"},{"id":"ulatech","img":"1927.png"},{"id":"digital-credits","img":"1114.png"},{"id":"futurexe","img":"1798.png"},{"id":"pizzacoin","img":"1355.png"},{"id":"ebittree-coin","img":"1634.png"},{"id":"ckusd","img":"2596.png"},{"id":"huobi-token","img":"2502.png"},{"id":"content-and-ad-network","img":"2358.png"},{"id":"chatcoin","img":"2427.png"},{"id":"waykichain","img":"2346.png"},{"id":"kcash","img":"2379.png"},{"id":"weth","img":"2396.png"},{"id":"show","img":"2361.png"},{"id":"fairgame","img":"2366.png"},{"id":"dragon-coins","img":"2593.png"},{"id":"gems-protocol","img":"2537.png"},{"id":"iquant","img":"1971.png"},{"id":"topchain","img":"2376.png"},{"id":"oceanchain","img":"2483.png"},{"id":"ofcoin","img":"2456.png"},{"id":"bitcoinx","img":"2281.png"},{"id":"acute-angle-cloud","img":"2438.png"},{"id":"apex","img":"2641.png"},{"id":"realchain","img":"2414.png"},{"id":"tokenomy","img":"2576.png"},{"id":"starchain","img":"2432.png"},{"id":"molecular-future","img":"2441.png"},{"id":"ipchain","img":"2433.png"},{"id":"lightchain","img":"2435.png"},{"id":"moac","img":"2403.png"},{"id":"monero-original","img":"2632.png"},{"id":"aware","img":"2393.png"},{"id":"amlt","img":"2607.png"},{"id":"noah-coin","img":"2599.png"},{"id":"blockcdn","img":"2247.png"},{"id":"auctus","img":"2653.png"},{"id":"halalchain","img":"2480.png"},{"id":"selfsell","img":"2439.png"},{"id":"maggie","img":"2434.png"},{"id":"u-network","img":"2645.png"},{"id":"neurotoken","img":"2536.png"},{"id":"fargocoin","img":"1497.png"},{"id":"filecoin","img":"2280.png"},{"id":"bitstation","img":"2619.png"},{"id":"bnktothefuture","img":"2605.png"},{"id":"adhive","img":"2646.png"},{"id":"sentinel","img":"2643.png"},{"id":"super-bitcoin","img":"2282.png"},{"id":"cybervein","img":"2642.png"},{"id":"monero-classic","img":"2655.png"},{"id":"dignity","img":"2659.png"},{"id":"win-coin","img":"2201.png"},{"id":"atmcoin","img":"1910.png"},{"id":"stockchain","img":"2618.png"},{"id":"eosdac","img":"2644.png"},{"id":"bitrent","img":"2612.png"},{"id":"electronic-pk-chain","img":"2487.png"},{"id":"animation-vision-cash","img":"2517.png"},{"id":"tezos","img":"2011.png"},{"id":"united-bitcoin","img":"2293.png"},{"id":"read","img":"2440.png"},{"id":"valuechain","img":"2488.png"},{"id":"lightning-bitcoin","img":"2335.png"},{"id":"belugapay","img":"2636.png"},{"id":"pressone","img":"2455.png"},{"id":"infinity-economics","img":"2013.png"},{"id":"aidos-kuneen","img":"1706.png"},{"id":"commerceblock","img":"2650.png"},{"id":"titanium-bar","img":"2613.png"},{"id":"comsa-eth","img":"2262.png"},{"id":"bigone-token","img":"2324.png"},{"id":"aseancoin","img":"1848.png"},{"id":"stellite","img":"2629.png"},{"id":"qube","img":"2408.png"},{"id":"segwit2x","img":"2072.png"},{"id":"bitsoar","img":"2059.png"},{"id":"curriculum-vitae","img":"2652.png"},{"id":"arbitracoin","img":"2639.png"},{"id":"investdigital","img":"2406.png"},{"id":"snipcoin","img":"2647.png"},{"id":"jingtum-tech","img":"2383.png"},{"id":"gamechain","img":"2350.png"},{"id":"budbo","img":"2654.png"},{"id":"titanium-blockchain","img":"2431.png"},{"id":"datx","img":"2567.png"},{"id":"sphre-air","img":"1795.png"},{"id":"etherecash","img":"2532.png"},{"id":"unlimitedip","img":"2454.png"},{"id":"consensus","img":"2621.png"},{"id":"wawllet","img":"2640.png"},{"id":"fidelium","img":"2637.png"},{"id":"tokendesk","img":"2635.png"},{"id":"syncfab","img":"2658.png"},{"id":"comsa-xem","img":"2266.png"},{"id":"brahmaos","img":"2657.png"},{"id":"cfun","img":"2356.png"},{"id":"strikebitclub","img":"2259.png"},{"id":"odem","img":"2631.png"},{"id":"signal-token","img":"2611.png"},{"id":"greenmed","img":"2651.png"},{"id":"techshares","img":"1360.png"},{"id":"daneel","img":"2656.png"},{"id":"bitcoin-god","img":"2370.png"},{"id":"golos-gold","img":"1542.png"},{"id":"friends","img":"2626.png"},{"id":"candy","img":"2485.png"},{"id":"mktcoin","img":"2516.png"},{"id":"vice-industry-token","img":"2625.png"},{"id":"entcash","img":"2331.png"},{"id":"w3coin","img":"2531.png"},{"id":"minex","img":"1863.png"},{"id":"lendroid-support-token","img":"2609.png"},{"id":"francs","img":"1164.png"},{"id":"animecoin","img":"150.png"},{"id":"runners","img":"2077.png"},{"id":"bt2-cst","img":"2114.png"},{"id":"escoro","img":"2338.png"},{"id":"clubcoin","img":"1135.png"},{"id":"msd","img":"2008.png"},{"id":"embercoin","img":"1843.png"},{"id":"swisscoin","img":"2050.png"},{"id":"peculium","img":"2610.png"},{"id":"vulcano","img":"2123.png"},{"id":"cloud","img":"2385.png"},{"id":"avatarcoin","img":"1146.png"},{"id":"etherdelta-token","img":"2409.png"},{"id":"hodl-bucks","img":"2004.png"},{"id":"terranova","img":"1809.png"},{"id":"uttoken","img":"2371.png"},{"id":"edrcoin","img":"1216.png"},{"id":"plexcoin","img":"2228.png"},{"id":"wa-space","img":"1449.png"},{"id":"sjwcoin","img":"1028.png"},{"id":"cryptopiafeeshares","img":"2353.png"},{"id":"huncoin","img":"1742.png"},{"id":"harvest-masternode-coin","img":"2412.png"},{"id":"president-trump","img":"1348.png"},{"id":"fluz-fluz","img":"2587.png"},{"id":"rabbitcoin","img":"572.png"},{"id":"bubble","img":"918.png"},{"id":"bitbase","img":"2129.png"},{"id":"safe-trade-coin","img":"1506.png"},{"id":"storjcoin-x","img":"549.png"},{"id":"alphabitcoinfund","img":"1256.png"},{"id":"ox-fina","img":"1914.png"},{"id":"teslacoilcoin","img":"1264.png"},{"id":"namocoin","img":"1920.png"},{"id":"slothcoin","img":"287.png"},{"id":"macro1","img":"2016.png"},{"id":"internet-of-things","img":"1631.png"},{"id":"first-bitcoin-capital","img":"1871.png"},{"id":"president-johnson","img":"1352.png"},{"id":"acchain","img":"2515.png"},{"id":"numuscash","img":"2347.png"},{"id":"royalties","img":"1835.png"},{"id":"zengold","img":"1695.png"},{"id":"high-gain","img":"2138.png"},{"id":"btcmoon","img":"2119.png"},{"id":"ea-coin","img":"2183.png"},{"id":"tattoocoin-limited","img":"1647.png"},{"id":"akuya-coin","img":"2054.png"},{"id":"bitserial","img":"2194.png"},{"id":"sparks","img":"2448.png"},{"id":"dutch-coin","img":"2067.png"},{"id":"flappycoin","img":"152.png"},{"id":"davorcoin","img":"2292.png"},{"id":"primulon","img":"1827.png"},{"id":"blazercoin","img":"1623.png"},{"id":"shacoin","img":"411.png"},{"id":"india-coin","img":"1997.png"},{"id":"turbocoin","img":"1767.png"},{"id":"zilbercoin","img":"1526.png"},{"id":"wi-coin","img":"1979.png"},{"id":"fonziecoin","img":"1065.png"},{"id":"quotient","img":"733.png"},{"id":"bestchain","img":"1604.png"},{"id":"marxcoin","img":"1565.png"},{"id":"grandcoin","img":"71.png"},{"id":"bastonet","img":"2046.png"},{"id":"corion","img":"2049.png"},{"id":"pirate-blocks","img":"1756.png"},{"id":"pabyosi-coin-special","img":"1487.png"},{"id":"sakuracoin","img":"1425.png"},{"id":"cyder","img":"1945.png"},{"id":"alpacoin","img":"1157.png"},{"id":"dynamiccoin","img":"1436.png"},{"id":"protean","img":"1913.png"},{"id":"goldmaxcoin","img":"1213.png"},{"id":"neo-gold","img":"2174.png"},{"id":"superior-coin","img":"2522.png"},{"id":"gold-reward-token","img":"2192.png"},{"id":"regacoin","img":"1459.png"},{"id":"universalroyalcoin","img":"1783.png"},{"id":"granitecoin","img":"382.png"},{"id":"encryptotel-eth","img":"2018.png"},{"id":"topcoin","img":"135.png"},{"id":"xtd-coin","img":"1907.png"},{"id":"ethereum-lite","img":"2101.png"},{"id":"first-bitcoin","img":"1323.png"},{"id":"stex","img":"1707.png"},{"id":"gaycoin","img":"1398.png"},{"id":"coffeecoin","img":"317.png"},{"id":"ereal","img":"2108.png"},{"id":"futcoin","img":"1006.png"},{"id":"tellurion","img":"1393.png"},{"id":"klondikecoin","img":"101.png"},{"id":"musiconomi","img":"2000.png"},{"id":"halloween-coin","img":"1679.png"},{"id":"aces","img":"1351.png"},{"id":"cashme","img":"1119.png"},{"id":"antimatter","img":"1753.png"},{"id":"zsecoin","img":"1598.png"},{"id":"ur","img":"1561.png"},{"id":"todaycoin","img":"1356.png"},{"id":"donationcoin","img":"385.png"},{"id":"indicoin","img":"2519.png"},{"id":"lepen","img":"1530.png"},{"id":"anryze","img":"2234.png"},{"id":"landcoin","img":"1507.png"},{"id":"wink","img":"1865.png"},{"id":"sharkcoin","img":"841.png"},{"id":"topaz","img":"1663.png"},{"id":"levocoin","img":"1429.png"},{"id":"batcoin","img":"171.png"},{"id":"sportscoin","img":"1385.png"},{"id":"darklisk","img":"1243.png"},{"id":"fapcoin","img":"2118.png"},{"id":"paypeer","img":"1207.png"},{"id":"cubits","img":"1435.png"},{"id":"thecreed","img":"1236.png"},{"id":"nitro","img":"2420.png"},{"id":"wearesatoshi","img":"584.png"},{"id":"royalcoin","img":"1428.png"},{"id":"fazzcoin","img":"1635.png"},{"id":"bitok","img":"1741.png"},{"id":"compcoin","img":"1855.png"},{"id":"axiom","img":"1020.png"},{"id":"shellcoin","img":"924.png"},{"id":"birds","img":"1849.png"},{"id":"netbit","img":"1452.png"},{"id":"magnetcoin","img":"1952.png"},{"id":"ugain","img":"1336.png"},{"id":"rublebit","img":"1117.png"},{"id":"t-coin","img":"1489.png"},{"id":"qora","img":"344.png"},{"id":"dashs","img":"1645.png"},{"id":"safecoin","img":"1262.png"},{"id":"avoncoin","img":"1533.png"},{"id":"opescoin","img":"1151.png"},{"id":"mobilecash","img":"1416.png"},{"id":"pokecoin","img":"1330.png"},{"id":"uncoin","img":"855.png"},{"id":"richcoin","img":"1269.png"},{"id":"moneta2","img":"1099.png"},{"id":"digital-bullion-gold","img":"1287.png"},{"id":"cheapcoin","img":"1728.png"},{"id":"rcoin","img":"1418.png"},{"id":"lazaruscoin","img":"1402.png"},{"id":"smoke","img":"1898.png"},{"id":"linkedcoin","img":"1313.png"},{"id":"gameleaguecoin","img":"419.png"},{"id":"hyper","img":"353.png"},{"id":"deltacredits","img":"1045.png"},{"id":"cycling-coin","img":"992.png"},{"id":"karmacoin","img":"116.png"},{"id":"trickycoin","img":"876.png"},{"id":"frankywillcoin","img":"1328.png"},{"id":"cybercoin","img":"878.png"},{"id":"prismchain","img":"1271.png"},{"id":"psilocybin","img":"1203.png"},{"id":"x2","img":"1131.png"},{"id":"operand","img":"1222.png"},{"id":"sisa","img":"2189.png"},{"id":"betacoin","img":"70.png"},{"id":"cryptcoin","img":"337.png"},{"id":"international-diamond","img":"1319.png"},{"id":"rhfcoin","img":"1633.png"},{"id":"infinitecoin","img":"41.png"},{"id":"vpncoin","img":"735.png"},{"id":"eggcoin","img":"912.png"},{"id":"happy-creator-coin","img":"1301.png"},{"id":"omicron","img":"1400.png"},{"id":"kashhcoin","img":"1551.png"},{"id":"mergecoin","img":"1649.png"},{"id":"sigmacoin","img":"1921.png"},{"id":"bitfid","img":"1929.png"},{"id":"ug-token","img":"1932.png"},{"id":"farstcoin","img":"2322.png"},{"id":"hyper-pay","img":"2329.png"},{"id":"timescoin","img":"2442.png"},{"id":"zebi","img":"2685.png"},{"id":"dock","img":"2675.png"},{"id":"lendingblock","img":"2686.png"},{"id":"fintrux-network","img":"2667.png"},{"id":"effect-ai","img":"2666.png"},{"id":"linker-coin","img":"2677.png"},{"id":"aphelion","img":"2684.png"},{"id":"srcoin","img":"2672.png"},{"id":"chainium","img":"2673.png"},{"id":"masari","img":"2674.png"},{"id":"haven-protocol","img":"2662.png"},{"id":"helbiz","img":"2680.png"},{"id":"dero","img":"2665.png"},{"id":"origami","img":"2681.png"},{"id":"earth-token","img":"2668.png"},{"id":"crycash","img":"2664.png"},{"id":"fantasy-cash","img":"1234.png"},{"id":"trustnote","img":"2701.png"},{"id":"penta","img":"2691.png"},{"id":"daex","img":"2696.png"},{"id":"holo","img":"2682.png"},{"id":"vipstar-coin","img":"2688.png"},{"id":"sharder","img":"2699.png"},{"id":"mark-space","img":"2669.png"},{"id":"loopring-neo","img":"2693.png"},{"id":"starcointv","img":"2663.png"},{"id":"nexo","img":"2694.png"},{"id":"rublix","img":"2689.png"},{"id":"hydrogen","img":"2698.png"},{"id":"bitcoin-interest","img":"2702.png"},{"id":"pixie-coin","img":"2670.png"},{"id":"proxeus","img":"2687.png"},{"id":"amon","img":"2705.png"},{"id":"betterbetting","img":"2703.png"},{"id":"aditus","img":"2660.png"},{"id":"b2bcoin","img":"2678.png"},{"id":"biotron","img":"2690.png"},{"id":"cropcoin","img":"2671.png"},{"id":"nebula-ai","img":"2692.png"},{"id":"trakinvest","img":"2683.png"},{"id":"hade-platform","img":"2697.png"},{"id":"phi-token","img":"2676.png"},{"id":"verime","img":"2695.png"},{"id":"decentralized-machine-learning","img":"2679.png"},{"id":"nullex","img":"1268.png"},{"id":"transcodium","img":"2704.png"},{"id":"plancoin","img":"2706.png"},{"id":"crowd-machine","img":"2708.png"},{"id":"flip","img":"2707.png"},{"id":"live-stars","img":"2710.png"},{"id":"trueusd","img":"2563.png"},{"id":"stealth","img":"448.png"},{"id":"docademic","img":"2711.png"},{"id":"ucom","img":"2386.png"},{"id":"leviar","img":"1746.png"},{"id":"tripio","img":"2661.png"},{"id":"mytoken","img":"2712.png"},{"id":"key","img":"2713.png"},{"id":"morpheus-labs","img":"2709.png"},{"id":"connectjob","img":"2715.png"},{"id":"nexty","img":"2714.png"},{"id":"proud-money","img":"1398.png"},{"id":"tatatu","img":"2886.png"},{"id":"aurora","img":"2874.png"},{"id":"mco","img":"1776.png"},{"id":"external-token","img":"3134.png"},{"id":"truechain","img":"2457.png"},{"id":"aston","img":"2732.png"},{"id":"fuzex","img":"2723.png"},{"id":"nectar","img":"2538.png"},{"id":"quarkchain","img":"2840.png"},{"id":"loyalcoin","img":"2841.png"},{"id":"medx","img":"2845.png"},{"id":"apis","img":"2767.png"},{"id":"seele","img":"2830.png"},{"id":"libra-credit","img":"2760.png"},{"id":"mainframe","img":"2896.png"},{"id":"gochain","img":"2861.png"},{"id":"contentbox","img":"2945.png"},{"id":"scroll","img":"2939.png"},{"id":"distributed-credit-chain","img":"2881.png"},{"id":"ternio","img":"2876.png"},{"id":"pchain","img":"2838.png"},{"id":"iotex","img":"2777.png"},{"id":"content-neutrality-network","img":"2735.png"},{"id":"cryptaur","img":"2766.png"},{"id":"spindle","img":"2828.png"},{"id":"gincoin","img":"2773.png"},{"id":"metronome","img":"2873.png"},{"id":"vite","img":"2937.png"},{"id":"fnkos","img":"2924.png"},{"id":"sakura-bloom","img":"2742.png"},{"id":"endor-protocol","img":"2835.png"},{"id":"xyo-network","img":"2765.png"},{"id":"cosmo-coin","img":"2955.png"},{"id":"ttc-protocol","img":"3175.png"},{"id":"wabnetwork","img":"2980.png"},{"id":"eximchain","img":"2778.png"},{"id":"zper","img":"2972.png"},{"id":"arbitrage","img":"2985.png"},{"id":"bhpcash","img":"3020.png"},{"id":"nkn","img":"2780.png"},{"id":"lightpaycoin","img":"2974.png"},{"id":"ivy","img":"2833.png"},{"id":"nix","img":"2991.png"},{"id":"egretia","img":"2885.png"},{"id":"gonetwork","img":"2898.png"},{"id":"flo","img":"64.png"},{"id":"local-coin-swap","img":"2970.png"},{"id":"xmax","img":"2859.png"},{"id":"mossland","img":"2915.png"},{"id":"utrum","img":"2731.png"},{"id":"sentinel-protocol","img":"2866.png"},{"id":"traxia","img":"2850.png"},{"id":"cashbet-coin","img":"2855.png"},{"id":"popchain","img":"2902.png"},{"id":"bezant","img":"2727.png"},{"id":"0chain","img":"2882.png"},{"id":"zmine","img":"3022.png"},{"id":"the-abyss","img":"2847.png"},{"id":"energitoken","img":"2872.png"},{"id":"constellation","img":"2868.png"},{"id":"digitex-futures","img":"2772.png"},{"id":"oneledger","img":"2921.png"},{"id":"blocktrade","img":"3084.png"},{"id":"heartbout","img":"3171.png"},{"id":"bit-z-token","img":"2918.png"},{"id":"silent-notary","img":"2764.png"},{"id":"daostack","img":"2726.png"},{"id":"massgrid","img":"3072.png"},{"id":"skrumble-network","img":"2725.png"},{"id":"shivom","img":"2844.png"},{"id":"rate3","img":"2880.png"},{"id":"ice-rock-mining","img":"3065.png"},{"id":"ceek-vr","img":"2856.png"},{"id":"callisto-network","img":"2757.png"},{"id":"clipper-coin","img":"2897.png"},{"id":"rightmesh","img":"3014.png"},{"id":"smartshare","img":"2862.png"},{"id":"unibright","img":"2758.png"},{"id":"kora-network-token","img":"3086.png"},{"id":"loki","img":"2748.png"},{"id":"alax","img":"2875.png"},{"id":"merculet","img":"2869.png"},{"id":"bit-tube","img":"2561.png"},{"id":"winding-tree","img":"2728.png"},{"id":"bitmart-token","img":"2933.png"},{"id":"omnitude","img":"3081.png"},{"id":"faceter","img":"2775.png"},{"id":"phantasma","img":"2827.png"},{"id":"arionum","img":"3024.png"},{"id":"patron","img":"2759.png"},{"id":"forkcoin","img":"3130.png"},{"id":"colu-local-network","img":"2753.png"},{"id":"olive","img":"2957.png"},{"id":"nimiq-exchange-token","img":"1811.png"},{"id":"likecoin","img":"2909.png"},{"id":"digix-gold-token","img":"2739.png"},{"id":"relex","img":"2961.png"},{"id":"red","img":"2771.png"},{"id":"travala","img":"2776.png"},{"id":"heronode","img":"2754.png"},{"id":"vinchain","img":"3082.png"},{"id":"ac3","img":"2722.png"},{"id":"mtc-mesh-network","img":"2936.png"},{"id":"policypal-network","img":"2718.png"},{"id":"hurify","img":"2849.png"},{"id":"origin-sport","img":"2879.png"},{"id":"0xbtc","img":"2837.png"},{"id":"coinvest","img":"3017.png"},{"id":"kind-ads-token","img":"3078.png"},{"id":"nper","img":"2744.png"},{"id":"x8x-token","img":"3079.png"},{"id":"view","img":"2963.png"},{"id":"trittium","img":"2865.png"},{"id":"zippie","img":"2724.png"},{"id":"0xcert","img":"2920.png"},{"id":"naviaddress","img":"2825.png"},{"id":"boutspro","img":"2717.png"},{"id":"parkgene","img":"2720.png"},{"id":"zelcash","img":"3029.png"},{"id":"jury-online-token","img":"2948.png"},{"id":"nusd","img":"2927.png"},{"id":"proton-token","img":"2946.png"},{"id":"on-live","img":"2893.png"},{"id":"oyster-shell","img":"2750.png"},{"id":"tokenstars","img":"2729.png"},{"id":"tokia","img":"2756.png"},{"id":"ryo-currency","img":"2976.png"},{"id":"kanadecoin","img":"2890.png"},{"id":"forty-seven-bank","img":"2884.png"},{"id":"invacio","img":"2774.png"},{"id":"thrive-token","img":"2899.png"},{"id":"bobs-repair","img":"2889.png"},{"id":"dorado","img":"2887.png"},{"id":"narrative","img":"2956.png"},{"id":"optitoken","img":"3101.png"},{"id":"logiscoin","img":"3172.png"},{"id":"tgame","img":"2929.png"},{"id":"akroma","img":"3151.png"},{"id":"bigbom","img":"2836.png"},{"id":"elysian","img":"2944.png"},{"id":"kalkulus","img":"3018.png"},{"id":"paymon","img":"2848.png"},{"id":"signals-network","img":"2749.png"},{"id":"turtlecoin","img":"2958.png"},{"id":"apr-coin","img":"2721.png"},{"id":"xdna","img":"3125.png"},{"id":"acre","img":"3025.png"},{"id":"kryll","img":"2949.png"},{"id":"bridge-protocol","img":"2968.png"},{"id":"snowgem","img":"2912.png"},{"id":"ab-chain-rtb","img":"2967.png"},{"id":"privcy","img":"3013.png"},{"id":"bitrewards","img":"2977.png"},{"id":"zinc","img":"2883.png"},{"id":"fox-trading","img":"2966.png"},{"id":"croat","img":"3087.png"},{"id":"more-coin","img":"1722.png"},{"id":"fantasygold","img":"2870.png"},{"id":"bitcoinote","img":"3068.png"},{"id":"ethereum-monero","img":"2990.png"},{"id":"dystem","img":"3050.png"},{"id":"datarius-credit","img":"2752.png"},{"id":"aced","img":"2978.png"},{"id":"xovbank","img":"3097.png"},{"id":"bank-coin","img":"2743.png"},{"id":"niobio-cash","img":"3006.png"},{"id":"webcoin","img":"3027.png"},{"id":"crowdholding","img":"2910.png"},{"id":"fintab","img":"3174.png"},{"id":"rhenium","img":"2769.png"},{"id":"bitblocks","img":"3051.png"},{"id":"xmct","img":"2923.png"},{"id":"help-the-homeless-coin","img":"3122.png"},{"id":"semux","img":"3023.png"},{"id":"pikciochain","img":"2854.png"},{"id":"local-world-forwarders","img":"2761.png"},{"id":"fundrequest","img":"2751.png"},{"id":"no-bs-crypto","img":"2932.png"},{"id":"data-exchange","img":"2913.png"},{"id":"fabric-token","img":"2768.png"},{"id":"cazcoin","img":"2770.png"},{"id":"citadel","img":"1273.png"},{"id":"euno","img":"3071.png"},{"id":"fitrova","img":"2730.png"},{"id":"adrenaline","img":"3057.png"},{"id":"coni","img":"2895.png"},{"id":"project-pai","img":"2900.png"},{"id":"hitchain","img":"3182.png"},{"id":"hycon","img":"3147.png"},{"id":"zip","img":"2826.png"},{"id":"edu-coin","img":"2734.png"},{"id":"moving-cloud-coin","img":"1944.png"},{"id":"gsenetwork","img":"3123.png"},{"id":"six-domain-chain","img":"3058.png"},{"id":"pundi-x-nem","img":"3096.png"},{"id":"everipedia","img":"2930.png"},{"id":"proximax","img":"3126.png"},{"id":"bitkan","img":"2934.png"},{"id":"vexanium","img":"2998.png"},{"id":"digifinextoken","img":"2878.png"},{"id":"smart-application-chain","img":"3157.png"},{"id":"playcoin","img":"2928.png"},{"id":"fanstime","img":"2901.png"},{"id":"engagement-token","img":"2931.png"},{"id":"insight-chain","img":"3116.png"},{"id":"igtoken","img":"3121.png"},{"id":"freyrchain","img":"2733.png"},{"id":"ultra-salescoud","img":"3100.png"},{"id":"atc-coin","img":"1751.png"},{"id":"ubex","img":"3140.png"},{"id":"thingsoperatingsystem","img":"2987.png"},{"id":"sopay","img":"2947.png"},{"id":"dipnet","img":"2997.png"},{"id":"ubique-chain-of-things","img":"2871.png"},{"id":"open-platform","img":"2762.png"},{"id":"intelligent-investment-chain","img":"2741.png"},{"id":"litex","img":"3070.png"},{"id":"social-lending-token","img":"3117.png"},{"id":"insurchain","img":"2736.png"},{"id":"esports-token","img":"3073.png"},{"id":"ino-coin","img":"3085.png"},{"id":"hdac","img":"2999.png"},{"id":"experience-token","img":"3074.png"},{"id":"prasm","img":"2926.png"},{"id":"vethor-token","img":"3012.png"},{"id":"dacc","img":"2986.png"},{"id":"showhand","img":"3181.png"},{"id":"yuan-chain-coin","img":"3060.png"},{"id":"thingschain","img":"3131.png"},{"id":"gold-poker","img":"3184.png"},{"id":"bingocoin","img":"3107.png"},{"id":"wiki-token","img":"3090.png"},{"id":"airbloc","img":"3156.png"},{"id":"global-social-chain","img":"2737.png"},{"id":"saifu","img":"2917.png"},{"id":"carlive-chain","img":"3026.png"},{"id":"promotion-coin","img":"3061.png"},{"id":"pkg-token","img":"3106.png"},{"id":"cononchain","img":"3040.png"},{"id":"futurocoin","img":"2846.png"},{"id":"internationalcryptox","img":"3021.png"},{"id":"seer","img":"2903.png"},{"id":"salpay","img":"2857.png"},{"id":"blue-whale-token","img":"2953.png"},{"id":"hashgard","img":"2938.png"},{"id":"couchain","img":"2858.png"},{"id":"owndata","img":"3120.png"},{"id":"neurochain","img":"3016.png"},{"id":"sapien","img":"3091.png"},{"id":"essentia","img":"2906.png"},{"id":"dxchain-token","img":"3139.png"},{"id":"newstoken","img":"3110.png"},{"id":"wetoken","img":"2959.png"},{"id":"influence-chain","img":"2740.png"},{"id":"arbidex","img":"3179.png"},{"id":"ordocoin","img":"3109.png"},{"id":"atonomi","img":"2922.png"},{"id":"endorsit","img":"3076.png"},{"id":"engine","img":"2852.png"},{"id":"bitcapitalvendor","img":"3066.png"},{"id":"atlantis-blue-digital-token","img":"3105.png"},{"id":"intercrone","img":"3113.png"},{"id":"fundtoken","img":"2975.png"},{"id":"lemochain","img":"2950.png"},{"id":"ebcoin","img":"3055.png"},{"id":"eplus-coin","img":"3064.png"},{"id":"lina","img":"3083.png"},{"id":"beekan","img":"2914.png"},{"id":"cardstack","img":"2891.png"},{"id":"karatgold-coin","img":"2907.png"},{"id":"hold","img":"2863.png"},{"id":"cyberfm","img":"3146.png"},{"id":"cybereits","img":"2719.png"},{"id":"dacsee","img":"3054.png"},{"id":"linkey","img":"3178.png"},{"id":"davinci-coin","img":"3154.png"},{"id":"otcbtc-token","img":"2894.png"},{"id":"bankera","img":"2842.png"},{"id":"volt","img":"3004.png"},{"id":"dascoin","img":"2746.png"},{"id":"bitcoin-file","img":"2994.png"},{"id":"carblock","img":"2888.png"},{"id":"savedroid","img":"3161.png"},{"id":"themis","img":"3127.png"},{"id":"master-contract-token","img":"3002.png"},{"id":"luna-stars","img":"3019.png"},{"id":"wowbit","img":"2892.png"},{"id":"thore-cash","img":"3056.png"},{"id":"maximine-coin","img":"3115.png"},{"id":"tourist-token","img":"2960.png"},{"id":"escrowcoin","img":"3059.png"},{"id":"condominium","img":"2935.png"},{"id":"record","img":"2925.png"},{"id":"baasid","img":"3142.png"},{"id":"thorecoin","img":"3144.png"},{"id":"sp8de","img":"2940.png"},{"id":"apollo-currency","img":"2992.png"},{"id":"rusgas","img":"3114.png"},{"id":"nuggets","img":"3092.png"},{"id":"obitan-chain","img":"3152.png"},{"id":"bodhi-eth","img":"2877.png"},{"id":"ejoy","img":"2831.png"},{"id":"vikkytoken","img":"2965.png"},{"id":"valuecybertoken","img":"2964.png"},{"id":"globalvillage-ecosystem","img":"2969.png"},{"id":"new-power-coin","img":"3000.png"},{"id":"avinoc","img":"3089.png"},{"id":"hashcoin","img":"2908.png"},{"id":"xceltoken","img":"3098.png"},{"id":"pumapay","img":"3164.png"},{"id":"level-up","img":"2779.png"},{"id":"horuspay","img":"2993.png"},{"id":"mass-vehicle-ledger","img":"2982.png"},{"id":"haracoin","img":"3007.png"},{"id":"morpheus-network","img":"2763.png"},{"id":"stasis-eurs","img":"2989.png"},{"id":"ors-group","img":"2911.png"},{"id":"vivid-coin","img":"3008.png"},{"id":"bitnation","img":"3112.png"},{"id":"repo","img":"2829.png"},{"id":"idol-coin","img":"3042.png"},{"id":"nam-coin","img":"3069.png"},{"id":"you-coin","img":"3053.png"},{"id":"pigeoncoin","img":"2988.png"},{"id":"empowr-coin","img":"2973.png"},{"id":"apollon","img":"3159.png"},{"id":"metamorph","img":"3148.png"},{"id":"farmatrust","img":"3168.png"},{"id":"compound-coin","img":"3180.png"},{"id":"bitcoin-token","img":"3048.png"},{"id":"vitae","img":"3063.png"},{"id":"scorum-coins","img":"3094.png"},{"id":"quant","img":"3155.png"},{"id":"bitcoin-incognito","img":"3166.png"},{"id":"pecunio","img":"3143.png"},{"id":"trendercoin","img":"3173.png"},{"id":"yolocash","img":"3162.png"},{"id":"twinkle","img":"3153.png"},{"id":"alchemint-standards","img":"3119.png"},{"id":"sgpay","img":"3167.png"},{"id":"aegeus","img":"2942.png"},{"id":"blockmesh","img":"2747.png"},{"id":"niobium-coin","img":"3095.png"},{"id":"newton-coin-project","img":"2984.png"},{"id":"swytch-energy-token","img":"3103.png"},{"id":"siacashcoin","img":"3128.png"},{"id":"karma-eos","img":"3137.png"},{"id":"giant-coin","img":"3104.png"},{"id":"alttex","img":"3176.png"},{"id":"hybrid-block","img":"3169.png"},{"id":"mainstream-for-the-underground","img":"3189.png"},{"id":"ether-zero","img":"2843.png"},{"id":"talao","img":"3170.png"},{"id":"blocknode","img":"3046.png"},{"id":"highcoin","img":"3108.png"},{"id":"dws","img":"2919.png"},{"id":"netkoin","img":"3149.png"},{"id":"white-standard","img":"3003.png"},{"id":"mero","img":"3163.png"},{"id":"bitcoin-w-spectrum","img":"2996.png"},{"id":"eligma-token","img":"3052.png"},{"id":"wavebase","img":"2995.png"},{"id":"contractnet","img":"2834.png"},{"id":"nyerium","img":"3129.png"},{"id":"ethergem","img":"3132.png"},{"id":"bitcoin-one","img":"3088.png"},{"id":"securecloudcoin","img":"3183.png"},{"id":"bittwatt","img":"2867.png"},{"id":"infinipay","img":"3160.png"},{"id":"adultchain","img":"2983.png"},{"id":"purex","img":"3009.png"},{"id":"blockpass","img":"3141.png"},{"id":"opcoinx","img":"3045.png"},{"id":"c2c-system","img":"3150.png"},{"id":"meetone","img":"3136.png"},{"id":"consentium","img":"2981.png"},{"id":"brickblock","img":"3015.png"},{"id":"graviocoin","img":"3118.png"},{"id":"seal-network","img":"3177.png"},{"id":"zcore","img":"3158.png"},{"id":"pitiscoin","img":"3043.png"},{"id":"super-game-chain","img":"2738.png"},{"id":"brokernekonetwork","img":"3030.png"},{"id":"qurito","img":"2905.png"},{"id":"xtrd","img":"3067.png"},{"id":"wys-token","img":"2954.png"},{"id":"lynx","img":"3099.png"},{"id":"mirq","img":"2853.png"},{"id":"gamblecoin","img":"3062.png"},{"id":"arion","img":"3165.png"},{"id":"bitscreener-token","img":"3011.png"},{"id":"hero","img":"2755.png"},{"id":"cedex-coin","img":"3135.png"},{"id":"commercium","img":"3080.png"},{"id":"excaliburcoin","img":"3039.png"},{"id":"ferron","img":"3145.png"},{"id":"gold-bits-coin","img":"2952.png"},{"id":"latino-token","img":"3033.png"},{"id":"ultranote-coin","img":"3047.png"},{"id":"arepacoin","img":"3133.png"},{"id":"food","img":"3041.png"},{"id":"dragonglass","img":"3124.png"},{"id":"galaxy-esolutions","img":"2716.png"},{"id":"fcoin-token","img":"2904.png"},{"id":"rocket-pool","img":"2943.png"},{"id":"kwhcoin","img":"3001.png"},{"id":"coinsuper-ecosystem-network","img":"3010.png"},{"id":"arlize","img":"3049.png"},{"id":"bitcoin-instant","img":"3075.png"},{"id":"powercoin","img":"1279.png"},{"id":"vechainold","img":"1904.png"},{"id":"coinex-token","img":"2941.png"},{"id":"chex","img":"2962.png"},{"id":"linfinity","img":"2979.png"},{"id":"noku","img":"3138.png"}];
+
+var fiats=[
+    {token:"$",symbol:"USD"},
+	{token:"$",symbol:"AUD"},
+	{token:"R$",symbol:"BRL"},
+	{token:"$",symbol:"CAD"},
+	{token:"Fr.",symbol:"CHF"},
+	{token:"$",symbol:"CLP"},
+	{token:"¥",symbol:"CNY"},
+	{token:"Kč",symbol:"CZK"},
+	{token:"kr.",symbol:"DKK"},
+	{token:"€",symbol:"EUR"},
+	{token:"£",symbol:"GBP"},
+	{token:"$",symbol:"HKD"},
+	{token:"Ft",symbol:"HUF"},
+	{token:"Rp",symbol:"IDR"},
+	{token:"₪",symbol:"ILS"},
+	{token:"₹",symbol:"INR"},
+	{token:"¥",symbol:"JPY"},
+	{token:"₩",symbol:"KRW"},
+	{token:"$",symbol:"MXN"},
+	{token:"RM",symbol:"MYR"},
+	{token:"kr",symbol:"NOK"},
+	{token:"$",symbol:"NZD"},
+	{token:"₱",symbol:"PHP"},
+	{token:"Rs",symbol:"PKR"},
+	{token:"zł",symbol:"PLN"},
+	{token:"₽",symbol:"RUB"},
+	{token:"kr",symbol:"SEK"},
+	{token:"S$",symbol:"SGD"},
+	{token:"฿",symbol:"THB"},
+	{token:"₺",symbol:"TRY"},
+	{token:"NT$",symbol:"TWD"},
+	{token:"R",symbol:"ZAR"}
+]
+//html page elements
+var tbodyHodlings,tbodyHodlingsPreview,tableHodlingsPreview,spanTotalValue,spanTotalValueBTC,spanChange24hr,iconChange24hr,iAddHodlings,inputAddHodlings;
+var modalCoinHeader,modalCoinImage,modalCoinPrompt,modalCryptoSign,modalCryptoSymbol;
+var modalAlertHeader,modalAlertMessage,modalConfirmHeader,modalConfirmMessage,modalConfirmNeg,modalConfirmPos;
+var clearAll,donate,btnSave,btnUpload,btnConfigure,btnHelp;
+var hodler,spanVersion;
+
+
+//called on page load
+function init() {
+	
+	//initialize html element vars
+	tbodyHodlings=document.getElementById("tbodyHodlings");
+	tbodyHodlingsPreview=document.getElementById("tbodyHodlingsPreview");
+	tableHodlingsPreview=document.getElementById("tableHodlingsPreview");
+	spanTotalValue=document.getElementById("spanTotalValue");
+	spanTotalValueBTC=document.getElementById("spanTotalValueBTC");
+	spanChange24hr=document.getElementById("spanChange24hr");
+	iconChange24hr=document.getElementById("iconChange24hr");
+	iAddHodlings=document.getElementById("iAddHodlings");
+	inputAddHodlings=document.getElementById("inputAddHodlings");
+	modalCoinHeader=document.getElementById("modalCoinHeader");
+	modalCoinImage=document.getElementById("modalCoinImage");
+	modalCoinPrompt=document.getElementById("modalCoinPrompt");
+	modalCryptoSign=document.getElementById("modalCryptoSign");
+	modalCryptoSymbol=document.getElementById("modalCryptoSymbol");
+	modalAlertHeader=document.getElementById("modalAlertHeader");
+	modalAlertMessage=document.getElementById("modalAlertMessage");
+	modalConfirmHeader=document.getElementById("modalConfirmHeader");
+	modalConfirmMessage=document.getElementById("modalConfirmMessage");
+	modalConfirmNeg=document.getElementById("modalConfirmNeg");
+	modalConfirmPos=document.getElementById("modalConfirmPos");
+	clearAll=document.getElementById("clearAll");
+	donate=document.getElementById("donate");
+	btnSave=document.getElementById("btnSave");
+	btnUpload=document.getElementById("btnUpload");
+	btnConfigure=document.getElementById("btnConfigure");
+	btnHelp=document.getElementById("btnHelp");
+	
+	btnSave.addEventListener("click",save);
+	btnUpload.addEventListener("click",upload);
+	btnConfigure.addEventListener("click",configure);
+	btnHelp.addEventListener("click",help);
+	spanVersion=document.getElementById("spanVersion");
+	
+	//show version
+	spanVersion.textContent=currentVersion;
+	
+	//uploads
+	hodler=document.getElementById("hodler"),
+	
+	//clear all hodls menu button
+	clearAll.addEventListener("click",clearAllHodls);
+	
+	//add hodlings plus sign
+	iAddHodlings.addEventListener("click",function(e) {
+		var value=inputAddHodlings.value.trim();
+		var price=prices.find(obj=>obj.name.toLowerCase()===value.toLowerCase());
+		if(!price) {
+			hodlAlert("Coin to hodl not found!");
+			return;
+		}
+		//clear value from search
+		inputAddHodlings.value;
+		
+		//add value
+		updateHodl(price,null);
+	});
+	
+	setTimeout(function() {
+		//get prices from coinmarketcap.com and hodlingData from browser storage
+		getPrices("USD",function(success) {
+			//check if got current prices
+			if(success) {
+				console.log("success!");
+				//update ImageData, fill in missing images from any unknown coins
+				console.log("Retrieving image data..wait for it...ALIENS");
+				getImageData(0,function(result) {
+					console.log("getImageData result:"+result);
+					console.log("replace imageData initialization with this array");
+					console.log("imageData[]="+JSON.stringify(imageData));
+				});
+				
+				//load hodlingData if any
+				getHodlingData();
+				
+				//get fiat
+				fiat=fiats.find(obj=>obj.symbol===hodlingData.defaultFiat);
+				
+				//update tables
+				updateHodlingTable();
+				
+				//check for new version
+				//delete hodlingData.lastNotifiedVersion;
+				checkForNewVersion();
+			}
+		});
+	},1000);
+	
+
+	//search for hodl to add
+     $("#searchHodlings").search({
+        type:'standard',
+        minCharacters:2,
+        onSelect:function onSelect(result, response) {
+          console.log(result);
+        },
+         apiSettings:{
+          responseAsync:function mockResponseAsync(settings,callback) {
+            if(settings.urlData.query) {
+            	console.log("settings.urlData.query:"+settings.urlData.query);
+              (function() {
+                var result={
+                  "results":{}
+                };
+
+                prices.filter(function(price) {
+                  return price.name.toLowerCase().includes(settings.urlData.query.toLowerCase())||price.symbol.toLowerCase().includes(settings.urlData.query.toLowerCase());
+                }).forEach(function(item) {
+                  result.results[item.id.toString()]=item;
+                });
+                callback(result);
+              })();
+            } else {
+            	callback({});
+            }
+          },
+          throttle:400
+        },
+        templates:{
+          message:function message(type, _message) {
+            var html='<div class="message empty"><div class="header">No coins to hodl found!</div><div class="description">Must hodl... hodllllll</div></div>';
+            return html;
+          },
+          standard:function(response) {
+           	//returns results html for standard results
+            var html="";
+            Object.keys(response.results).forEach(function(key) {
+                  html+='<a class="result"><img src="https://'+imageUrlroot+'/32x32/'+response.results[key].img+'"><div class="content menuItem"><div class="title">' + response.results[key].name + '</div><div class="description">' + response.results[key].symbol + '</div></div></a>';
+            });
+            return html;
+          }
+        }
+      });	
+	
+	//donate
+	donate.addEventListener("click",function(){
+		$("#modalDonate")
+		.modal({
+			allowMultiple:true,
+			transition:"scale",
+			closable:false
+		})
+		.modal("show");		
+	});
+	
+	//upload holdings.json file
+	hodler.ondragover=function() {
+	    this.className="hover";
+	    return false;
+	};
+	hodler.ondragend=function() {
+	    this.className="";
+	    return false;
+	};
+	hodler.ondrop = function(e) {
+	    this.className="";
+	    e.preventDefault();
+	
+	    var file=e.dataTransfer.files[0],
+	        reader=new FileReader();
+	    
+	    reader.onload=function(event) {
+	    	try {
+	        	var json=JSON.parse(event.target.result);
+	        	//check for correct properties
+	        	if(("defaultFiat" in json) && ("hodlings" in json)) {
+	        		//has properties so store in new buffer
+	        		hodlingDataNew=json;
+	        		
+	        		//update old hodlingData to include id of hodling, in case of duplicate symbols like GTC
+	        		upgradeHodlingData(hodlingDataNew);
+	        		
+	        		//preview the data
+	        		updateUploadPreview();
+	        	} else {
+	        		hodlAlert("Hodl file is missing key properties");
+	        	}
+	    	} catch(e) {
+	    		hodlAlert("Hodl file error: "+e.message);
+	    	}
+	    };
+	    console.log(file);
+
+	    //check for .json file type
+	    if(file.name.endsWith(".json")) {
+	    	reader.readAsText(file);
+	    } else {
+	    	hodlAlert("The file must end with '.json'");
+	    }
+	
+	    return false;
+	};
+	
+	//make the main table sortable
+	$("#mainTable").tablesort();
+	
+	//save the sort direction if changed
+	$("#mainTable").on("tablesort:complete",function(event,tablesort) {
+		//save that sort direction changed
+		hodlingData.tablesort={index:tablesort.index,direction:tablesort.direction};
+		
+    	//save to storage
+		localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
+	});
+}
+
+function checkForNewVersion() {
+	//if they are on the main site, then no need to check for current version
+	if(location.href.includes("hodlerfolio.com")) return;
+	
+	//check for new version available using git version tag
+	getVersions(function(success) {
+		//check if got current versions
+		if(success) {
+			//check against this program version, only notify if new
+			if(compareVersions(currentVersion,latestVersion)<0) {
+				//if never notified, or have latest version is newer than last notified version
+				if(!("lastNotifiedVersion" in hodlingData) || compareVersions(hodlingData.lastNotifiedVersion,latestVersion)<0) {
+					hodlConfirm("A newer HoderFolio version exists ("+latestVersion+"); would you like to download it?","New HodlerFolio!","Not now, maybe later.","Hodl yes!",
+					function(positiveResponse) {
+						console.log("positiveResponse:"+positiveResponse);
+						if(positiveResponse) {
+							//explain the steps to get there
+							setTimeout(function() {
+								hodlAlert("Go to <a href='https://hodlerfolio.com'>https://hodlerfolio.com</a> then save the page to your computer.","How to get the new HodlerFolio");
+							},1000);
+						}
+						
+						//save that this version was notified
+						hodlingData.lastNotifiedVersion=latestVersion;
+						
+				    	//save to storage
+						localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
+					}.bind(this));
+				}
+			}
+		}
+	});
+}
+
+function save() {
+	//filename
+	var filename="hodlings.json";
+	
+	//construct the a element
+	var a=document.createElement("a");
+	var file=new Blob([JSON.stringify(hodlingData)],{type:"text/plain"});
+	a.download=filename;
+
+	//construct the uri
+	a.href=URL.createObjectURL(file);
+	document.body.appendChild(a);
+	a.click();
+
+	//cleanup the DOM
+	document.body.removeChild(a);
+	delete a;
+
+	hodlAlert("Your hodlings have been saved to '"+filename+"'!","Hodlings Hodled!");
+}
+
+function upload() {
+	$("#modalUpload")
+	.modal({
+		allowMultiple:true,
+		transition:"scale",
+		closable:false,
+		onDeny:function() {
+			//hide table for next time			
+			tableHodlingsPreview.classList.add("hide");			
+		},
+		onApprove:function(){
+			//exit if no data
+			if(!hodlingDataNew) return;
+			
+			//hide table for next time			
+			tableHodlingsPreview.classList.add("hide");
+			
+			//copy the data to use now, create new object
+			hodlingData=JSON.parse(JSON.stringify(hodlingDataNew));
+			hodlingDataNew=null;
+			
+	    	//save to storage
+			localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
+	    	
+	    	//update all display
+	    	updateHodlingTable();
+		}
+	})
+	.modal("show");
+}
+
+function configure() {
+	hodlAlert("This feature is coming soon!","Coming Soon!");
+}
+
+function help() {
+	hodlAlert("This feature is coming soon!","Coming Soon!");
+}
+
+//create or update hodl
+function updateHodl(price,hodlingsIndex) {
+	//check if this is a new hodl
+	if(hodlingsIndex==null) {
+		//new hodl
+		modalHodlAmount.value="0.00";
+		modalHodlNote.value="";
+	} else {
+		//existing hodl
+		modalHodlAmount.value=hodlingData.hodlings[hodlingsIndex].amount;
+		if("note" in hodlingData.hodlings[hodlingsIndex]) {
+			modalHodlNote.value=hodlingData.hodlings[hodlingsIndex].note;
+		} else {
+			modalHodlNote.value="";
+		}
+	}
+	modalCoinHeader.textContent=price.name;
+	modalCoinImage.src="https://"+imageUrlroot+"/128x128/"+price.img+"?t="+(new Date()/1000);
+	modalCoinPrompt.textContent=price.name;
+	modalCryptoSign.textContent=price.symbol;
+	
+	
+	$("#modalEditHodl")
+			.modal({
+				allowMultiple:true,
+			transition:"horizontal flip",
+			closable:false,
+		    onApprove:function(){
+		    	//check if valid hodl
+		    	var amount=parseFloat(modalHodlAmount.value.trim());
+		    	if(isNaN(amount)||amount<=0.0) {
+		    		//show alert
+		    		hodlAlert("You can't hodl that!");
+		    		
+		    		//select the amount in the input box
+		    		modalHodlAmount.select();
+		    		return false;
+		    	}
+		    	var note=modalHodlNote.value.trim();
+		    	
+		    	//check if this is a new hodl
+		    	if(hodlingsIndex==null) {
+		    		//add new hodl
+		    		var hodl={id:price.id,symbol:price.symbol,amount:amount,note:note};
+		    		hodlingData.hodlings.push(hodl);
+		    	} else {
+		    		//update existing hodl
+		    		hodlingData.hodlings[hodlingsIndex].amount=modalHodlAmount.value;
+		    		hodlingData.hodlings[hodlingsIndex].note=modalHodlNote.value;
+		    	}
+		    	
+		    	//save to storage
+				localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
+		    	
+		    	//update all display
+		    	updateHodlingTable();
+		    	
+		    	return true;
+		    }
+		})
+			.modal("show");
+	
+	//select the amount in the input box
+	modalHodlAmount.select();
+}
+
+//hodl alert box
+function hodlAlert(message,header) {
+	//set header for alert box
+	if(!header) {
+		modalAlertHeader.textContent="Hodler Alert!";
+	} else {
+		modalAlertHeader.textContent=header;
+	}
+	//set message for alert box
+	modalAlertMessage.innerHTML=message;
+	
+	$("#modalAlertHodl")
+			.modal({
+				allowMultiple:true,
+				transition:"scale",
+				closable:false
+			})
+			.modal("show");
+}
+
+//hodl confirm box
+function hodlConfirm(message,header,neg,pos,callback) {
+	//set header for alert box
+	if(!header) {
+		modalConfirmHeader.textContent="Hodler Please Confirm";
+	} else {
+		modalConfirmHeader.textContent=header;
+	}
+	
+	//set neg for alert box
+	if(!neg) {
+		modalConfirmNeg.textContent="No";
+	} else {
+		modalConfirmNeg.textContent=neg;
+	}
+	
+	//set neg for alert box
+	if(!pos) {
+		modalConfirmPos.textContent="Yes";
+	} else {
+		modalConfirmPos.textContent=pos;
+	}
+	
+	//set message for alert box
+	modalConfirmMessage.textContent=message;
+	
+	$("#modalConfirmHodl")
+			.modal({
+				allowMultiple:true,
+				transition:"scale",
+				closable:false,
+				onDeny:function(){
+					if(callback) callback(false);
+				},
+				onApprove:function(){
+					if(callback) callback(true);
+				}
+			})
+			.modal("show");
+}
+
+//get the latest prices
+function getPrices(fiat,callback) {
+	var url="https://api.coinmarketcap.com/v1/ticker/?limit=0"+(fiat=="USD"?"":"&convert="+fiat);
+	var req=new XMLHttpRequest();
+	var timerId,percent=0;
+
+	req.onreadystatechange=function(e) {
+		if(req.readyState==4) {
+			if(req.status==200) {
+				console.log("prices:"+req.responseText);
+				prices=JSON.parse(req.responseText);
+				callback(true);
+			} else {
+				callback(false);
+			}
+			console.log(req.responseText);
+		}
+	}
+	
+	//not responding try again after 5 seconds so try again
+	req.ontimeout=function(e) {
+		//stop progress timer if not already stopped
+		clearInterval(timerId);
+		getPrices(fiat,callback);
+	}
+
+	req.timeout=5000;
+	req.open("GET",url,true);
+	req.setRequestHeader("Accept","application/json");
+	req.send(null);
+	
+	//set progress bar to 0, and start 5 second timer for countdown to retry
+	timerId=setInterval(function() {
+		$("#progressRetry").progress({
+	  		percent: percent
+		});
+		percent+=10;
+		if(percent>100) {
+			clearInterval(timerId);
+			percent=100;
+		}
+	},500)
+}
+
+//get the latest tagged versions
+function getVersions(callback) {
+	var url="https://api.github.com/repos/rengelking/hodlerfolio.com/tags";
+	var req=new XMLHttpRequest();
+
+	req.onreadystatechange=function(e) {
+		if(req.readyState==4) {
+			if(req.status==200) {
+				latestVersion=JSON.parse(req.responseText)[0].name;
+				callback(true);
+			} else {
+				callback(false);
+			}
+			console.log(req.responseText);
+		}
+	}
+
+	req.open("GET",url,true);
+	req.setRequestHeader("Accept","application/json");
+	req.send(null);
+}
+
+function compareVersions(version0,version1) {
+	//remove text characters and convert to arrays
+	var v0=version0.replace(/[^0-9.]/g,"").split(".");
+	var v1=version1.replace(/[^0-9.]/g, "").split(".");
+	
+	//loop through arrays
+	for(var i=0;i<v0.length;i++) {
+		//get value for each integer
+		var n0=parseInt(v0[i]);
+		var n1=parseInt(v1[i]);
+		
+		//if value is same move to check next lower value
+		if(parseInt(v0[i])==parseInt(v1[i])) continue;
+		
+		//if current value is less than new value, return -1, current version can be updated
+		if(n0<n1) return -1;
+		
+		//if current value is more than new value, they have the latest version and it hasn't been updated in git yet
+		if(n0>n1) return 1;
+	}
+	//versions match	
+	return 0;
+}
+
+function getHodlingData() {
+	//get stored hodlings
+	hodlingData=localStorage.getItem("hodlingData");
+	//if none stored then use default settings and intialize storage
+	if(!hodlingData) {
+		//use default settings
+		hodlingData={
+			defaultFiat:"USD",
+			hodlings:[
+			]
+		};
+		//store these settings
+		localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
+	} else {
+		//parse JSON into object
+		hodlingData=JSON.parse(hodlingData);
+		
+		//update old hodlingData to include id of hodling, in case of duplicate symbols like GTC
+		upgradeHodlingData();
+	}
+}
+
+//get any missing images from the main list (images have an id number)
+//check console for updated imageData array and replace in code at start
+function getImageData(index,callback) {
+//	console.log("getImageData "+index);
+	//check if at end of all data
+	if(index==prices.length) {
+		callback(true);
+		return;
+	}
+	//go through each price and find corresponding image number
+	var price=prices[index];
+	
+	//check initial imageData array first for image
+	var img=imageData.find(obj=>obj.id===price.id);
+	
+	if(typeof img!="undefined") {
+//		console.log("found image data for "+price.id);
+		//update image in prices array
+		price.img=img.img;
+		getImageData(index+1,callback);
+		return;
+	} else {
+		console.log("not found:"+price.id+"\t"+JSON.stringify(price));
+	}
+	
+	var url="https://coinmarketcap.com/currencies/"+price.id+"/";
+	var req=new XMLHttpRequest();
+
+	req.onreadystatechange=function(e) {
+		if(req.readyState==4) {
+			if(req.status==200) {
+				var parser=new DOMParser();
+				var doc=parser.parseFromString(req.responseText, "text/html");
+				img=doc.querySelector("img[class='logo-32x32']");
+				var parts=img.src.split("/");
+				var img=parts[parts.length-1];
+				imageData.push({
+					id:price.id,
+					img:img
+				});
+				
+				//update image in prices array
+				price.img=img;
+				//try next image
+				console.log("image "+price.id+" is "+img);
+				getImageData(index+1,callback);
+			} else {
+				//try same image again
+				//console.log("retrying image: "+price.id);
+				//getImageData(index,callback);
+				//try next image
+				console.log("failed image: "+price.id);
+				getImageData(index+1,callback);
+			}
+		}
+	}
+
+	console.log("retrieving image data for "+price.id);
+	req.timeout=10000;
+	req.open("GET","https://cors-anywhere.herokuapp.com/"+url,true);
+	req.send(null);
+}
+
+function upgradeHodlingData(previewData) {
+	var data,doSave=false,missingIds=false;
+	
+	//check if data param included
+	if(!previewData) {
+		data=hodlingData;
+		//save the data after updating if it needs updating, as it is the main data
+		doSave=true;
+	} else {
+		//use preview data
+		data=previewData;
+	}
+	
+	//update old hodlingData to include id of hodling, in case of duplicate symbols like GTC
+	var duplicateSymbols=[];
+	for(var i=0,hodlings=data.hodlings;i<hodlings.length;i++) {
+		//get this hodling
+		var hodling=hodlings[i];
+		
+		
+		console.log("hodling:"+JSON.stringify(hodling));
+		//check if id exists and if not, then add the id
+		if(!("id" in hodling)) {
+			//look up this id
+			//get the price data for this hodling
+			var price=prices.find(obj=>obj.symbol===hodling.symbol);
+			
+			//count duplicate symbols if they exist
+			var count=0;
+			prices.find(function (obj) {
+				if(obj.symbol===hodling.symbol) count++;
+				return false; 
+			});
+			
+			//add duplicate symbol to the list
+			if(count>1) {
+				duplicateSymbols.push(hodling.symbol);
+			}
+			
+			//set the id for this hodling
+			hodling.id=price.id;
+			
+			//flag to save later
+			missingIds=true;
+		}
+	}
+	
+	//show notice if there are duplicate hodling data symbols
+	if(duplicateSymbols.length>0) {
+		hodlAlert("The following coin symbols are also being used with other coins.  Please check that you have the correct coin entered for:<br>"+duplicateSymbols.join(", ")+"</br>");
+	}
+	
+	//save if main data and ids were missing
+	if(doSave && missingIds) {
+		//store these settings
+		localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
+	}
+}
+
+function toCurrency(n) {
+	return (Number(n)).toLocaleString('en-US',{style:'decimal',maximumFractionDigits:(n<.01?6:2),minimumFractionDigits:2});
+}
+
+function coinDetails() {
+	window.open("https://coinmarketcap.com/currencies/"+this.dataset.id,"_blank");
+}
+
+function updateHodlingTable() {
+	
+	//clear existing hodlings rows
+	while(tbodyHodlings.childNodes.length>0) tbodyHodlings.removeChild(tbodyHodlings.childNodes[0]);
+	
+	//update rows
+	var tr,td,img,br,txt,span,iTag;
+	console.log("hodlingData:"+JSON.stringify(hodlingData));
+	
+	var totalValue=0.0;
+	var totalValueBTC=0.0;
+	var totalValue24hrsAgo=0.0;
+	//go through existing hodlings and create new row
+	for(var i=0,hodlings=hodlingData.hodlings;i<hodlings.length;i++) {
+		
+		//get this hodling
+		var hodling=hodlings[i];
+		
+		//get the price data for this hodling
+		var price=prices.find(obj=>obj.id===hodling.id);
+		if(typeof price==="undefined") {
+			//prompt("Couldn't find a coin: "+hodling.id+"\nAmount: ",""+hodling.amount+" "+hodling.id);
+			continue;
+		}
+		
+		//get amount in fiat
+		var priceInFiat=parseFloat(price.price_usd);
+		var priceInBTC=parseFloat(price.price_btc);
+		var amount=parseFloat(hodling.amount);
+		var percentChange=(price.percent_change_24h?parseFloat(price.percent_change_24h):0.0);
+		var amountInFiat=(priceInFiat*hodling.amount);
+		var amountInBTC=(priceInBTC*hodling.amount);
+		var amountInFiat24hrsAgo=amountInFiat/(1+percentChange/100);
+		var note=("note" in hodling?hodling.note:"");
+		totalValue+=amountInFiat;
+		totalValueBTC+=amountInBTC;
+		totalValue24hrsAgo+=amountInFiat24hrsAgo;
+		
+		//new table row
+		tr=document.createElement("tr");
+		tr.dataset.id=price.id;
+		
+		//create coin/symbol
+		td=document.createElement("td");
+		td.classList.add("center","aligned","pointer");
+		td.dataset.id=price.id;
+		td.addEventListener("click",coinDetails);
+		//coin image
+		img=document.createElement("img");
+		img.src="https://"+imageUrlroot+"/32x32/"+price.img;
+		img.alt=price.name;
+		td.appendChild(img);
+		//br line break
+		br=document.createElement("br");
+		td.appendChild(br);
+		//symbol
+		txt=document.createTextNode(price.symbol);
+		td.appendChild(txt);
+		//add cell to row
+		tr.appendChild(td);
+		
+		//create amount in fiat/amount in native
+		td=document.createElement("td");
+		td.classList.add("right","aligned");
+		//amount in fiat
+		span=document.createElement("span");
+		span.className="fiatAmount";
+		td.appendChild(span);
+		txt=document.createTextNode(fiat.token+toCurrency(amountInFiat));
+		span.appendChild(txt);
+		//br line break
+		br=document.createElement("br");
+		td.appendChild(br);
+		//amount in btc
+		span=document.createElement("span");
+		span.className="btcAmount";
+		td.appendChild(span);
+		txt=document.createTextNode(" "+toCurrency(amountInBTC)+" BTC");
+		span.appendChild(txt);
+		//br line break
+		br=document.createElement("br");
+		td.appendChild(br);
+		//amount in native
+		span=document.createElement("span");
+		span.className="amount";
+		td.appendChild(span);
+		txt=document.createTextNode((""+amount.toFixed(12)).replace(/\.?0+$/,"")+" "+price.symbol);
+		span.appendChild(txt);
+		//sort value
+		td.dataset.sortValue=amountInFiat;
+		//add cell to row
+		tr.appendChild(td);
+		
+		//current fiat price/percent change
+		td=document.createElement("td");
+		td.classList.add("right","aligned","padRight");
+		//current fiat price
+		span=document.createElement("span");
+		span.className="price";
+		td.appendChild(span);
+		txt=document.createTextNode(fiat.token+toCurrency(priceInFiat));
+		span.appendChild(txt);
+		iTag=document.createElement("i");
+		if(percentChange>0) {
+			iTag.classList.add("icon","long","arrow","up","priceUp");
+		} else if(percentChange<0) {
+			iTag.classList.add("icon","long","arrow","down","priceDown");
+		} else {
+			iTag.classList.add("icon","minus");
+		}
+		span.appendChild(iTag);
+		//br line break
+		br=document.createElement("br");
+		td.appendChild(br);
+		//percent change
+		span=document.createElement("span");
+		span.className=percentChange>0?"priceUp":(percentChange<0?"priceDown":"");
+		td.appendChild(span);
+		txt=document.createTextNode((percentChange>=0?"+":"")+percentChange+"%");
+		span.appendChild(txt);
+		//sort value
+		td.dataset.sortValue=priceInFiat;
+		//add cell to row
+		tr.appendChild(td);
+		
+		//create notes
+		td=document.createElement("td");
+		td.classList.add("center","aligned");
+		//note
+		txt=document.createTextNode(note.substr(0,30)+(note.length>30?"...":""));
+		//check if note is link
+		var regex=/^https?:\/\//;
+		if(regex.test(note)) {
+			//show link
+			var a=document.createElement("a");
+			a.href=note;
+			a.target="_blank";
+			a.classList.add("ui");
+			a.dataset.tooltip=note;
+			a.appendChild(txt);
+			td.appendChild(a);
+		} else {
+			//show note text
+			span=document.createElement("span");
+			span.dataset.tooltip=note;
+			span.appendChild(txt);
+			td.appendChild(span);
+		}
+		//add cell to row
+		tr.appendChild(td);
+
+		
+		//actions
+		td=document.createElement("td");
+		
+		//edit hodl
+		iTag=document.createElement("i");
+		iTag.classList.add("edit","icon","action");
+		iTag.title="Edit";
+		iTag.addEventListener("click",editHodl);
+		iTag.price=price;
+		iTag.hodlIndex=i;
+		td.appendChild(iTag);
+
+		//hodl alert
+/* 		iTag=document.createElement("i");
+		iTag.classList.add("alarm","outline","icon","action");
+		iTag.title="Alert";
+		iTag.addEventListener("click",alertHodl);
+		iTag.price=price;
+		iTag.hodlIndex=i;
+		td.appendChild(iTag); */
+		
+		//delete hodl
+		iTag=document.createElement("i");
+		iTag.classList.add("trash","icon","action");
+		iTag.title="Delete";
+		iTag.addEventListener("click",deleteHodl);
+		iTag.hodlIndex=i;
+		td.appendChild(iTag);
+		
+		//add cell to row
+		td.classList.add("center","aligned","action");
+		tr.appendChild(td);
+
+		//add row
+		tbodyHodlings.appendChild(tr);
+	}
+	
+	//show final total
+	spanTotalValue.textContent=fiat.token+toCurrency(totalValue);
+	spanTotalValueBTC.textContent=toCurrency(totalValueBTC)+" BTC";
+	var percentChange24hr=(totalValue24hrsAgo>0?(totalValue*100)/totalValue24hrsAgo-100:0);
+	console.log("totalValue24hrsAgo:"+totalValue24hrsAgo);
+	spanChange24hr.textContent=(percentChange24hr>=0?"+":"")+percentChange24hr.toFixed(2)+"%";
+	spanChange24hr.className="";
+	iconChange24hr.className="";
+	if(percentChange24hr>0) {
+		spanChange24hr.classList.add("priceUp");
+		iconChange24hr.classList.add("icon","long","arrow","up","priceUp");
+	} else if(percentChange24hr<0) {
+		spanChange24hr.classList.add("priceDown");
+		iconChange24hr.classList.add("icon","long","arrow","down","priceDown");
+	} else {
+		iconChange24hr.classList.add("icon","minus");
+	}
+	
+	//get tablesort reference
+	var tablesort=$("#mainTable").data("tablesort");
+
+	//sort the table data
+	if("tablesort" in hodlingData) {
+		
+		//set sort if there was a sort already set
+		tablesort.sort($("#th"+hodlingData.tablesort.index),hodlingData.tablesort.direction);
+	} else {
+		//set default sort direction and save
+		hodlingData.tablesort={index:0,direction:"asc"};
+		
+    	//save to storage
+		localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
+    	
+		//set sort
+		tablesort.sort($("#th0"),"asc");
+	}
+	
+}
+
+function updateUploadPreview() {
+		
+	//clear existing hodler children
+	while(tbodyHodlingsPreview.childNodes.length>0) tbodyHodlingsPreview.removeChild(tbodyHodlingsPreview.childNodes[0]);
+	
+	//show preview of data in json file
+	var tr,td,img,br,txt,span,iTag;
+	console.log("prices:"+JSON.stringify(prices));
+	
+	//go through existing hodlings and create new row
+	for(var i=0,hodlings=hodlingDataNew.hodlings;i<hodlings.length;i++) {
+		
+		//get this hodling
+		var hodling=hodlings[i];
+		
+		//get the price data for this hodling
+		var price=prices.find(obj=>obj.id===hodling.id);
+		if(typeof price==="undefined") {
+			prompt("Couldn't find a coin: "+hodling.id+"\nAmount: ",""+hodling.amount+" "+hodling.id);
+			continue;
+		}
+		//get amount in fiat
+		var priceInFiat=parseFloat(price.price_usd);
+		var priceInBTC=parseFloat(price.price_btc);
+		var amount=parseFloat(hodling.amount);
+		var percentChange=(price.percent_change_24h?parseFloat(price.percent_change_24h):0.0)
+		var amountInFiat=(priceInFiat*hodling.amount);
+		var amountInBTC=(priceInBTC*hodling.amount);
+		var amountInFiat24hrsAgo=amountInFiat/(1+percentChange/100);
+		
+		//new table row
+		tr=document.createElement("tr");
+		
+		//create coin/symbol
+		td=document.createElement("td");
+		td.classList.add("center","aligned");
+		//coin image
+		img=document.createElement("img");
+		img.src="https://"+imageUrlroot+"/32x32/"+price.img;
+		img.alt=price.name;
+		td.appendChild(img);
+		//br line break
+		br=document.createElement("br");
+		td.appendChild(br);
+		//symbol
+		txt=document.createTextNode(price.symbol);
+		td.appendChild(txt);
+		//add cell to row
+		tr.appendChild(td);
+		
+		//create amount in fiat/amount in native
+		td=document.createElement("td");
+		td.classList.add("right","aligned");
+		//amount in fiat
+		span=document.createElement("span");
+		span.className="fiatAmount";
+		td.appendChild(span);
+		txt=document.createTextNode(fiat.token+toCurrency(amountInFiat));
+		span.appendChild(txt);
+		//br line break
+		br=document.createElement("br");
+		td.appendChild(br);
+		//amount in native
+		span=document.createElement("span");
+		span.className="amount";
+		td.appendChild(span);
+		txt=document.createTextNode(parseFloat(amount));
+		span.appendChild(txt);
+		//add cell to row
+		tr.appendChild(td);
+		
+		//current fiat price/percent change
+		td=document.createElement("td");
+		td.classList.add("right","aligned","padRight");
+		//current fiat price
+		span=document.createElement("span");
+		span.className="price";
+		td.appendChild(span);
+		txt=document.createTextNode(fiat.token+toCurrency(priceInFiat));
+		span.appendChild(txt);
+		iTag=document.createElement("i");
+		if(percentChange>0) {
+			iTag.classList.add("icon","long","arrow","up","priceUp");
+		} else if(percentChange<0) {
+			iTag.classList.add("icon","long","arrow","down","priceDown");
+		} else {
+			iTag.classList.add("icon","minus");
+		}
+		span.appendChild(iTag);
+		//br line break
+		br=document.createElement("br");
+		td.appendChild(br);
+		//percent change
+		span=document.createElement("span");
+		span.className=percentChange>0?"priceUp":(percentChange<0?"priceDown":"");
+		td.appendChild(span);
+		txt=document.createTextNode((percentChange>=0?"+":"")+percentChange+"%");
+		span.appendChild(txt);
+		//add cell to row
+		tr.appendChild(td);
+		
+		//add row
+		tbodyHodlingsPreview.appendChild(tr);
+	}
+	
+	//show table
+	tableHodlingsPreview.classList.remove("hide");
+
+}
+
+function editHodl(event) {
+	event.stopPropagation();
+	updateHodl(this.price,this.hodlIndex);
+}
+
+function alertHodl() {
+	
+}
+
+function deleteHodl(event) {
+	event.stopPropagation();
+	hodlConfirm("Are you sure you want to delete this hodl?","Delete Your Hodl???","Hodl no!","Just do it.",function(positiveResponse) {
+		if(positiveResponse) {
+			//remove this hold
+			hodlingData.hodlings.splice(this.hodlIndex,1);
+			
+	    	//save to storage
+			localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
+	    	
+	    	//update all display
+	    	updateHodlingTable();
+		}
+	}.bind(this));
+}
+
+function clearAllHodls() {
+	hodlConfirm("Are you sure you want to delete all hodls?","Delete All Hodls???","Hodl no!","Why not...",function(positiveResponse) {
+		if(positiveResponse) {
+			//remove all hodlings
+			hodlingData.hodlings=[];
+			
+	    	//save to storage
+			localStorage.setItem("hodlingData",JSON.stringify(hodlingData));
+	    	
+	    	//update all display
+	    	updateHodlingTable();
+		}
+	}.bind(this));
+}
+
+/*
+A simple, lightweight jQuery plugin for creating sortable tables.
+https://github.com/kylefox/jquery-tablesort
+Version 0.0.11
+*/
+
+(function($) {
+$.tablesort = function ($table, settings) {
+	var self = this;
+	this.$table = $table;
+	this.$thead = this.$table.find('thead');
+	this.settings = $.extend({}, $.tablesort.defaults, settings);
+	this.$sortCells = this.$thead.length > 0 ? this.$thead.find('th:not(.no-sort)') : this.$table.find('th:not(.no-sort)');
+	this.$sortCells.on('click.tablesort', function() {
+		self.sort($(this));
+	});
+	this.index = null;
+	this.$th = null;
+	this.direction = null;
+};
+
+$.tablesort.prototype = {
+
+	sort: function(th, direction) {
+		var start = new Date(),
+			self = this,
+			table = this.$table,
+			rowsContainer = table.find('tbody').length > 0 ? table.find('tbody') : table,
+			rows = rowsContainer.find('tr').has('td, th'),
+			cells = rows.find(':nth-child(' + (th.index() + 1) + ')').filter('td, th'),
+			sortBy = th.data().sortBy,
+			sortedMap = [];
+
+		var unsortedValues = cells.map(function(idx, cell) {
+			if (sortBy)
+				return (typeof sortBy === 'function') ? sortBy($(th), $(cell), self) : sortBy;
+			return ($(this).data().sortValue != null ? $(this).data().sortValue : $(this).text());
+		});
+		if (unsortedValues.length === 0) return;
+
+		//click on a different column
+		if (this.index !== th.index()) {
+			
+			console.log("CRAP this.index:"+this.index+"  th.index():"+th.index());
+			this.direction = (direction?direction:"asc");
+			this.index = th.index();
+		}
+		else if (direction !== 'asc' && direction !== 'desc')
+			this.direction = this.direction === 'asc' ? 'desc' : 'asc';
+		else
+			this.direction = direction;
+
+		direction = this.direction == 'asc' ? 1 : -1;
+
+		self.$table.trigger('tablesort:start', [self]);
+		self.log("Sorting by " + this.index + ' ' + this.direction);
+
+		// Try to force a browser redraw
+		self.$table.css("display");
+		// Run sorting asynchronously on a timeout to force browser redraw after
+		// `tablesort:start` callback. Also avoids locking up the browser too much.
+		setTimeout(function() {
+			self.$sortCells.removeClass(self.settings.asc + ' ' + self.settings.desc);
+			for (var i = 0, length = unsortedValues.length; i < length; i++)
+			{
+				sortedMap.push({
+					index: i,
+					cell: cells[i],
+					row: rows[i],
+					value: unsortedValues[i]
+				});
+			}
+
+			sortedMap.sort(function(a, b) {
+				return self.settings.compare(a.value, b.value) * direction;
+			});
+
+			$.each(sortedMap, function(i, entry) {
+				rowsContainer.append(entry.row);
+			});
+
+			th.addClass(self.settings[self.direction]);
+
+			self.log('Sort finished in ' + ((new Date()).getTime() - start.getTime()) + 'ms');
+			self.$table.trigger('tablesort:complete', [self]);
+			//Try to force a browser redraw
+			self.$table.css("display");
+		}, unsortedValues.length > 2000 ? 200 : 10);
+	},
+
+	log: function(msg) {
+		if(($.tablesort.DEBUG || this.settings.debug) && console && console.log) {
+			console.log('[tablesort] ' + msg);
+		}
+	},
+
+	destroy: function() {
+		this.$sortCells.off('click.tablesort');
+		this.$table.data('tablesort', null);
+		return null;
+	}
+
+};
+
+$.tablesort.DEBUG = false;
+
+$.tablesort.defaults = {
+	debug: $.tablesort.DEBUG,
+	asc: 'sorted ascending',
+	desc: 'sorted descending',
+	compare: function(a, b) {
+		if (a > b) {
+			return 1;
+		} else if (a < b) {
+			return -1;
+		} else {
+			return 0;
+		}
+	}
+};
+
+$.fn.tablesort = function(settings) {
+	var table, sortable, previous;
+	return this.each(function() {
+		table = $(this);
+		previous = table.data('tablesort');
+		if(previous) {
+			previous.destroy();
+		}
+		table.data('tablesort', new $.tablesort(table, settings));
+	});
+};
+
+})(window.Zepto || window.jQuery);
+
+	</script>
+</head>
+
+<body onload="init()">
+	<div class="ui container">
+		<div style="float: right;">
+			<div class="ui segment">
+				If you find this tool <span id="hoderific">hodlerific</span>,<br>please consider making a <a href="#" id="donate">donation</a>!<br>
+			</div>
+		</div>
+		<div style="float: right;margin-right:1em;">
+			
+		</div>
+		<div>
+			<img style="float: left; color: violet;"
+				src="data:image/png;base64,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">
+			<span class="logo">Hodlerfolio</span>
+			<h1>
+				<span class="quote">"...to have and to hodl, until death do us part"</span>
+			</h1>
+			<div style="color: #6435c9;">&bull;&nbsp;Open source (<a href="https://github.com/rengelking/hodlerfolio.com" target="_blank">GitHub</a>)&nbsp;&nbsp;&nbsp;&bull;&nbsp;Single HTML file, can run from your desktop&nbsp;&nbsp;&nbsp;&bull;&nbsp;You track your portfolio, no one tracks you!</div>
+		</div>
+		<div class="ui violet inverted menu">
+			<a class="header item">Hodlerfolio&nbsp;&nbsp;<span id="spanVersion"></span></a>
+			<div class="right menu">
+				<div id="searchHodlings" class="ui right aligned search attached item">
+					<div class="ui icon input">
+						<input id="inputAddHodlings" class="prompt" placeholder="Add hodlings..." type="text" autocomplete="off"> <i id="iAddHodlings" class="plus link icon"></i>
+					</div>
+					<div class="results"></div>
+				</div>
+				<a id="clearAll" class="item" title="Clear all hodls from browser"> <i class="trash icon"></i></a>
+				<a id="btnSave" class="item" title="Save to text file"> <i class="save icon"></i></a>
+				<a id="btnUpload" class="item" title="Upload from text file"> <i class="upload icon"></i></a>
+				<a id="btnConfigure" class="item" title="Configure settings"> <i class="configure icon"></i></a>
+				<a id="btnHelp" class="item" title="Help"> <i class="help icon"></i></a>
+				
+			</div>
+		</div>
+		<div class="ui vertically grid">
+			<div class="three column row">
+				<div class="column center aligned">
+					<h4 class="ui header gray">Total Portfolio Value</h4>
+					<span id="spanTotalValue">$0.00</span>
+				</div>
+				<div class="column center aligned">
+					<h4 class="ui header gray">24hr Change</h4>
+					<span id="spanChange24hr">0.00% </span><i id="iconChange24hr" class="icon minus"></i>
+				</div>
+				<div class="column center aligned">
+					<h4 class="ui header gray">Total Portfolio Value</h4>
+					<span id="spanTotalValueBTC">0.00 BTC</span>
+				</div>				
+			</div>
+			<div class="one column row">
+				<div class="column">
+					<table id="mainTable" class="ui sortable selectable celled table">
+						<thead>
+							<tr>
+								<th id="th0" class="center aligned two wide">Coin</th>
+								<th id="th1" class="center aligned four wide">Hodlings</th>
+								<th id="th2" class="center aligned single line three wide">Fiat Price</th>
+								<th id="th3" class="center aligned">Note</th>
+								<th class="center aligned no-sort two wide">Actions</th>
+							</tr>
+						</thead>
+						<tbody id="tbodyHodlings">
+							<tr>
+								<td colspan="5" class="center aligned">
+									<div class="ui segment">
+										<div class="ui active centered inline medium text loader">
+											<div class="ui text loader"></div>
+										</div>
+										<p>Retrieving latest prices, please wait...</p>
+									</div>
+									<div class="ui indicating progress" id="progressRetry">
+										<div class="bar">
+											<div class="progress"></div>
+										</div>
+										<div class="label">Time until retry</div>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+<!-- begin edit hodl modal -->
+
+	<div id="modalEditHodl" class="ui tiny modal">
+		<i class="close icon"></i>
+		<div class="header">
+			<span id="modalCoinHeader"></span> Hodlings
+		</div>
+		<div class="image content">
+			<div class="ui image">
+				<img id="modalCoinImage" src="" alt="">
+			</div>
+			<div class="description">
+				<div class="ui header">
+					Amount of <span id="modalCoinPrompt"></span> you are hodling:
+				</div>
+				<div class="ui right labeled input">
+					<input placeholder="Amount" id="modalHodlAmount" type="text" style="text-align: right";> <label for="modalHodlAmount" class="ui label" id="modalCryptoSign"></label>
+					<!-- <div class="ui basic label" id="modalCryptoSymbol"></div> -->
+				</div>
+
+				<p>
+					Click the '<b>Hodl</b>' button below to update your hodlings.</b>
+				</p>
+				<div class="ui mini fluid left icon input">
+					<input placeholder="Optional description or link" id="modalHodlNote" type="text" style="text-align: left";> 
+					<i class="tag icon"></i>
+					<!-- <div class="ui basic label" id="modalCryptoSymbol"></div> -->
+				</div>
+			</div>
+		</div>
+		<div class="actions">
+			<div class="ui black deny button">Cancel</div>
+			<div class="ui positive right labeled icon button">
+				Hodl<i class="checkmark icon"></i>
+			</div>
+		</div>
+	</div>
+	
+<!-- begin alert hodl modal -->
+	
+	<div id="modalAlertHodl" class="ui mini modal">
+		<div id="modalAlertHeader" class="header"></div>
+		<div class="content">
+			<p id="modalAlertMessage"></p>
+		</div>
+		<div class="actions">
+			<div class="ui positive button">Whatever</div>
+		</div>
+	</div>
+	
+<!-- begin upload hodl modal -->
+
+	<div id="modalUpload" class="ui tiny modal">
+		<div class="header">Drag and drop your 'hodlings.json' file here:</div>
+		<div class="content">
+			<div id="hodler">
+				<table id="tableHodlingsPreview" class="ui celled table hide">
+					<thead>
+						<tr>
+							<th class="center aligned">Coin</th>
+							<th class="center aligned">Hodlings</th>
+							<th class="center aligned single line">Fiat Price</th>
+						</tr>
+					</thead>
+					<tbody id="tbodyHodlingsPreview">
+					</tbody>
+				</table>
+
+			</div>
+			<p>Drag a <b>hodlings.json</b> file on to the hodl zone above to view update/replace your current hodlings.</p>
+		</div>
+		<div class="actions">
+			<div class="ui negative button">Hodl on, don't do anything!</div>
+			<div class="ui positive right labled icon button">Looks good!!!</div>
+		</div>
+	</div>
+	
+<!-- begin confirm hodl modal -->
+
+	<div id="modalConfirmHodl" class="ui mini modal">
+		<div id="modalConfirmHeader" class="header"></div>
+		<div class="content">
+			<p id="modalConfirmMessage"></p>
+		</div>
+		<div class="actions">
+			<div id="modalConfirmNeg" class="ui negative button">No</div>
+			<div class="ui positive right labled icon button">
+				<span id="modalConfirmPos">Yes</span><i class="checkmark icon"></i>
+			</div>
+		</div>
+	</div>
+	
+<!-- begin donate hodl modal -->
+
+	<div id="modalDonate" class="ui tiny modal">
+		<div class="header">Thanks for helping out!</div>
+		<div class="content">
+			<p>More features are coming soon!</p>
+			<p>Send requests to: <a href="mailto:hodlerfolio@steemir.com">hodlerfolio@steemir.com</a></p>
+			<p>
+			
+			<div id="donateLinks" class="ui grid">
+				<div class="one wide column middle aligned">
+					<img src="https://"+imageUrlroot+"/32x32/bitcoin.png">
+				</div>
+				<div class="four wide column middle aligned">Donate BTC:</div>
+				<div class="eleven wide column middle aligned">3QVqQ7MSM8Noyg3A224jefbixV9VVgfxgw</div>
+				<div class="one wide column middle aligned">
+					<img src="https://"+imageUrlroot+"/32x32/ethereum.png">
+				</div>
+				<div class="four wide column middle aligned">Donate ETH:</div>
+				<div class="eleven wide column middle aligned">0x3Be6aD6DA03B1e5b4082E8A08E2CDaf79422f8d1</div>
+				<div class="one wide column middle aligned">
+					<img src="https://"+imageUrlroot+"/32x32/ethereum-classic.png">
+				</div>
+				<div class="four wide column middle aligned">Donate ETC:</div>
+				<div class="eleven wide column middle aligned">0x81792efc25aa2AC4DE08dCc9D35325f4d7288781</div>
+				<div class="one wide column middle aligned">
+					<img src="https://"+imageUrlroot+"/32x32/bitcoin-cash.png">
+				</div>
+				<div class="four wide column middle aligned">Donate BCH:</div>
+				<div class="eleven wide column middle aligned">12Ki8CJ246BX5NMtWoVF5eAH7VKbrXfMq2</div>
+				<div class="one wide column middle aligned">
+					<img src="https://"+imageUrlroot+"/32x32/dash.png">
+				</div>
+				<div class="four wide column middle aligned">Donate DASH:</div>
+				<div class="eleven wide column middle aligned">Xjxua1BYm57KoXpXch8p9bnDPEHC95yc9B</div>
+				<div class="one wide column middle aligned">
+					<img src="https://"+imageUrlroot+"/32x32/litecoin.png">
+				</div>
+				<div class="four wide column middle aligned">Donate LTC:</div>
+				<div class="eleven wide column middle aligned">MN5XE4cxEKRUXCD5t2mztUmzD2fcLydPCt</div>
+				<div class="one wide column middle aligned">
+					<img src="https://"+imageUrlroot+"/32x32/zcash.png">
+				</div>
+				<div class="four wide column middle aligned">Donate ZEC:</div>
+				<div class="eleven wide column middle aligned">t1dBdzFWdGmSxYi9LWbj38ugKc8tcGEBXfh</div>
+			</div>
+			</p>
+		</div>
+		<div class="actions">
+			<div class="ui positive button">I'm all done here!</div>
+		</div>
+	</div>
+</body>
+
+</html>
